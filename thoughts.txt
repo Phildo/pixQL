@@ -1,0 +1,7 @@
+// Grid
+UPDATE output.pixels SET pixel.color.r = FF WHERE pixel.row % 100 == 0 OR pixel.column % 100 == 0; //too verbose
+SET color.r = FF WHERE row % 100 == 0 OR column % 100 == 0;
+
+// Resize
+SET color = pixels.row((row/height)*newHeight).column((column/width)*newWidth).color;
+
