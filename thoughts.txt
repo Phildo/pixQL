@@ -5,3 +5,26 @@ SET color.r = FF WHERE row % 100 == 0 OR column % 100 == 0;
 // Resize
 SET color = pixels.row((row/height)*newHeight).column((column/width)*newWidth).color;
 
+Ordering of SQL is terrible. Use opportunity to deviate/simplify.
+
+SELECT->OPERATE;{xn};OUTPUT;
+
+keywords
+--------
+SELECT
+WHERE
+THEN
+OPERATE
+
+IN[n]
+OUT
+PIXEL
+  COL
+  ROW
+  COLOR
+    R
+    G
+    B
+    A
+
+pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
