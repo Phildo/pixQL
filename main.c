@@ -20,6 +20,9 @@ int cmp(char *a, char *b)
   return 0;
 }
 
+const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
+const char *invalid = "Invalid file";
+
 typedef struct Pix
 {
   byte r;
@@ -27,9 +30,6 @@ typedef struct Pix
   byte b;
   byte a;
 } Pix;
-
-const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
-const char *invalid = "Invalid file";
 
 void dataToPix(byte *data, int bpp, int roww, int w, int h, Pix *pix)
 {
@@ -98,6 +98,7 @@ int main(int argc, char **argv)
   Pix *IN_DATA;
   Pix *OUT_DATA;
 
+  //INPUT
   FILE *in;
   if(!(in  = fopen(infile,  "r"))) ERROR(1,"Can't open input file- %s",infile);
 
@@ -111,8 +112,7 @@ int main(int argc, char **argv)
   READFIELD(bh->reserved_b,in);
   READFIELD(bh->offset,in);
 
-  //dib_header
-  //read dib_header_size
+  //read dib_header
   READFIELD(dh->header_size,in);
   switch(dh->header_size)
   {
@@ -134,15 +134,14 @@ int main(int argc, char **argv)
   READFIELD(ih->nplanes,in);
   READFIELD(ih->bpp,in);
 
-  IN_DATA  = malloc(ih->width*ih->height*sizeof(Pix));
-  OUT_DATA = malloc(ih->width*ih->height*sizeof(Pix));
-
   fseek(in, bh->offset, SEEK_SET);
   int roww = ((ih->bpp*ih->width+31)/32)*4;
   int pixel_bytes = roww*ih->height;
   b.pixel_array = malloc(pixel_bytes);
   if(pixel_bytes != fread(b.pixel_array, sizeof(byte), pixel_bytes, in)) ERROR(1,"%s",invalid);
 
+  IN_DATA  = malloc(ih->width*ih->height*sizeof(Pix));
+  OUT_DATA = malloc(ih->width*ih->height*sizeof(Pix));
   dataToPix(b.pixel_array, ih->bpp, roww, ih->width, ih->height, IN_DATA);
 
   //COPY
