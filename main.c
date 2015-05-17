@@ -30,6 +30,49 @@ typedef struct Pix
 
 const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
 const char *invalid = "Invalid file";
+
+void dataToPix(byte *data, int bpp, int roww, int w, int h, Pix *pix)
+{
+  switch(bpp)
+  {
+    case 32:
+      for(int i = 0; i < h; i++)
+      {
+        for(int j = 0; j < w; j++)
+        {
+          pix[(i*w)+j].r = data[(i*roww)+j+0];
+          pix[(i*w)+j].g = data[(i*roww)+j+1];
+          pix[(i*w)+j].b = data[(i*roww)+j+2];
+          pix[(i*w)+j].a = data[(i*roww)+j+3];
+        }
+      }
+    break;
+    default:
+      ERROR(1,"Invaid BPP");
+  }
+}
+
+void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
+{
+  switch(bpp)
+  {
+    case 32:
+      for(int i = 0; i < h; i++)
+      {
+        for(int j = 0; j < w; j++)
+        {
+          data[(i*roww)+j+0] = pix[(i*w)+j].r;
+          data[(i*roww)+j+1] = pix[(i*w)+j].g;
+          data[(i*roww)+j+2] = pix[(i*w)+j].b;
+          data[(i*roww)+j+3] = pix[(i*w)+j].a;
+        }
+      }
+    break;
+    default:
+      ERROR(1,"Invaid BPP");
+  }
+}
+
 int main(int argc, char **argv)
 {
   //Read args
@@ -51,6 +94,9 @@ int main(int argc, char **argv)
   BitmapFileHeader *bh = &b.bitmap_file_header;
   DIBHeader *dh = &b.dib_header;
   BITMAPINFOHEADER *ih;
+
+  Pix *IN_DATA;
+  Pix *OUT_DATA;
 
   FILE *in;
   if(!(in  = fopen(infile,  "r"))) ERROR(1,"Can't open input file- %s",infile);
@@ -87,11 +133,9 @@ int main(int argc, char **argv)
   READFIELD(ih->height,in);
   READFIELD(ih->nplanes,in);
   READFIELD(ih->bpp,in);
-  /*
-  printf("width %d\n",width);
-  printf("height %d\n",height);
-  printf("bpp %d\n",bpp);
-  */
+
+  IN_DATA  = malloc(ih->width*ih->height*sizeof(Pix));
+  OUT_DATA = malloc(ih->width*ih->height*sizeof(Pix));
 
   fseek(in, bh->offset, SEEK_SET);
   int roww = ((ih->bpp*ih->width+31)/32)*4;
@@ -99,58 +143,28 @@ int main(int argc, char **argv)
   b.pixel_array = malloc(pixel_bytes);
   if(pixel_bytes != fread(b.pixel_array, sizeof(byte), pixel_bytes, in)) ERROR(1,"%s",invalid);
 
-  Pix *pixels = malloc(ih->width*ih->height*sizeof(Pix));
-  switch(ih->bpp)
-  {
-    case 32:
-      for(int i = 0; i < ih->height; i++)
-      {
-        for(int j = 0; j < ih->width; j++)
-        {
-          pixels[(i*ih->width)+j].r = b.pixel_array[(i*roww)+j+0];
-          pixels[(i*ih->width)+j].g = b.pixel_array[(i*roww)+j+1];
-          pixels[(i*ih->width)+j].b = b.pixel_array[(i*roww)+j+2];
-          pixels[(i*ih->width)+j].a = b.pixel_array[(i*roww)+j+3];
-        }
-      }
-    break;
-    default:
-      ERROR(1,"Invaid BPP");
-  }
+  dataToPix(b.pixel_array, ih->bpp, roww, ih->width, ih->height, IN_DATA);
+
+  //COPY
+  for(int i = 0; i < ih->height; i++)
+    for(int j = 0; j < ih->width; j++)
+      OUT_DATA[(i*ih->width)+j] = IN_DATA[(i*ih->width)+j];
 
   //MODIFY
   for(int i = 0; i < ih->height; i++)
-    pixels[(i*ih->width)+(int)(((float)i/(float)ih->height)*ih->width)].r = 0xFF;
+    OUT_DATA[(i*ih->width)+(int)(((float)i/(float)ih->height)*ih->width)].r = 0xFF;
 
+  //OUTPUT
   FILE *out;
   if(!(out = fopen(outfile, "w"))) ERROR(1,"Can't open output file- %s",outfile);
 
-
-  int filesize = *(unsigned int *)&bh->size;
-  byte *indata = malloc(filesize);
-
+  byte *indata = malloc(bh->size);
   fseek(in, 0, SEEK_SET);
-  fread( indata, sizeof(byte), filesize, in);
-  fwrite(indata, sizeof(byte), filesize, out);
+  fread( indata, sizeof(byte), bh->size, in);
+  fwrite(indata, sizeof(byte), bh->size, out);
   fseek(out, bh->offset, SEEK_SET);
 
-  switch(ih->bpp)
-  {
-    case 32:
-      for(int i = 0; i < ih->height; i++)
-      {
-        for(int j = 0; j < ih->width; j++)
-        {
-          b.pixel_array[(i*roww)+j+0] = pixels[(i*ih->width)+j].r;
-          b.pixel_array[(i*roww)+j+1] = pixels[(i*ih->width)+j].g;
-          b.pixel_array[(i*roww)+j+2] = pixels[(i*ih->width)+j].b;
-          b.pixel_array[(i*roww)+j+3] = pixels[(i*ih->width)+j].a;
-        }
-      }
-    break;
-    default:
-      ERROR(1,"Invaid BPP");
-  }
+  pixToData(OUT_DATA, ih->bpp, roww, ih->width, ih->height, b.pixel_array);
 
   fwrite(b.pixel_array, sizeof(byte), pixel_bytes, out);
 

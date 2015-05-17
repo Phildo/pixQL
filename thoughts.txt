@@ -28,3 +28,8 @@ PIXEL
     A
 
 pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
+
+SRC = IN, OUT
+
+[ COPY | NEW(w,h) | ] ; SELECT {SRC} [ FROM {SRC} | ] WHERE [{SRC}. | ]{PROPERTY} [ < | > | = ] [ [{SRC}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
+
