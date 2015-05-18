@@ -6,6 +6,7 @@
 #include "dotypes.h"
 
 #include "bitmap.h"
+#include "query.h"
 
 #define ERROR(n,err, ...) ({ fprintf(stderr,err, ##__VA_ARGS__); printf("\n"); exit(n); })
 
@@ -30,6 +31,7 @@ typedef struct Pix
   byte b;
   byte a;
 } Pix;
+
 
 void dataToPix(byte *data, int bpp, int roww, int w, int h, Pix *pix)
 {
@@ -90,6 +92,7 @@ int main(int argc, char **argv)
   if(!outfile) ERROR(1,"%s\nNo output file specified.",usage);
   if(!query)   ERROR(1,"%s\nNo query specified.",      usage);
 
+  Query q;
   Bitmap b;
   BitmapFileHeader *bh = &b.bitmap_file_header;
   DIBHeader *dh = &b.dib_header;
@@ -97,6 +100,8 @@ int main(int argc, char **argv)
 
   Pix *IN_DATA;
   Pix *OUT_DATA;
+
+  q = parseQuery(query);
 
   //INPUT
   FILE *in;
