@@ -103,11 +103,108 @@ typedef struct Query
   QueryOperation *operations;
 } Query;
 
+
+int strLen(char *s)
+{
+  int i = 0;
+  while(s[i] != '\0') i++;
+  return i;
+}
+char toLower(char c)
+{
+  if(c > 'A' && c < 'Z')
+    return c - ('A'-'a');
+  return c;
+}
+int cmpLower(char *a, char *b)
+{
+  int i = 0;
+  char ca;
+  char cb;
+  int d;
+  while(a[i] != '\0' && b[i] != '\0')
+  {
+    ca = toLower(a[i]);
+    cb = toLower(b[i]);
+    d = ca-cb;
+    if(d != 0) return d;
+    i++;
+  }
+  if(a[i] == b[i]) return 0;
+  if(a[i] == '\0') return -1;
+  if(b[i] == '\0') return 1;
+  return 0; //shut up compiler
+}
+int readToken(char *s, int offset, char *buff)
+{
+  int i = 0;
+  char c;
+  while(1)
+  {
+    c = s[offset+i];
+    switch(c)
+    {
+      //EOS
+      case '\0':
+      {
+        buff[i] = '\0';
+        return i;
+      }
+        break;
+      //whitespace
+      case ' ':
+      case '\t':
+      case '\n':
+      {
+        buff[i] = '\0';
+        return i+1;
+      }
+        break;
+      //delimeter
+      case ';':
+      case '.':
+      case '+':
+      case '-':
+      case '=':
+      case '>':
+      case '<':
+      case '!':
+      {
+        if(i == 0)
+        {
+          buff[i] = c;
+          i++;
+          buff[i] = '\0';
+          return i;
+        }
+        else
+        {
+          buff[i] = '\0';
+          return i;
+        }
+      }
+        return i;
+      default:
+        buff[i] = c;
+        i++;
+        break;
+    }
+  }
+  return 0; //to shut the compiler up
+}
+
 Query parseQuery(char *q)
 {
   Query query;
-  //char token[256];
+  char token[256];
+  int o = 0;
+  int l = strLen(q);
 
+  o += readToken(q,o,token);
+  o += readToken(q,o,token);
+
+  printf("token :%s",token);
+  printf("len %d, rd %d",l,o);
   return query;
 }
 
