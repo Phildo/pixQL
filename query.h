@@ -2,12 +2,15 @@
 #define _QUERY_H_
 
 #include <string.h>
+#include "str.h"
+#include "token.h"
 
 typedef enum
 {
   QUERY_INIT_MODE_INVALID,
   QUERY_INIT_MODE_NEW,
   QUERY_INIT_MODE_COPY,
+  QUERY_INIT_MODE_BLANK,
   QUERY_INIT_MODE_COUNT
 } QUERY_INIT_MODE;
 typedef enum
@@ -118,145 +121,8 @@ typedef struct Query
   int nprocedures;
 } Query;
 
-int strLen(char *s)
-{
-  int i = 0;
-  while(s[i] != '\0') i++;
-  return i;
-}
-char toLower(char c)
-{
-  if(c > 'A' && c < 'Z')
-    return c - ('A'-'a');
-  return c;
-}
-int cmpLower(char *a, char *b)
-{
-  int i = 0;
-  char ca;
-  char cb;
-  int d;
-  while(a[i] != '\0' && b[i] != '\0')
-  {
-    ca = toLower(a[i]);
-    cb = toLower(b[i]);
-    d = ca-cb;
-    if(d != 0) return d;
-    i++;
-  }
-  if(a[i] == b[i]) return 0;
-  if(a[i] == '\0') return -1;
-  if(b[i] == '\0') return 1;
-  return 0; //shut up compiler
-}
-int intFromDec(char *s, int *d)
-{
-  int i = 0;
-  *d = 0;
-  while(s[i] != '\0')
-  {
-    if(s[i] < '0' || s[i] > '9') return 0;
-    *d *= 10;
-    *d += s[i]-'0';
-    i++;
-  }
-  return 1;
-}
-int readToken(char *s, int offset, char *buff)
-{
-  int i = 0;
-  char c;
-  while(1)
-  {
-    c = s[offset+i];
-    switch(c)
-    {
-      //EOS
-      case '\0':
-      {
-        buff[i] = '\0';
-        return i;
-      }
-        break;
-      //whitespace
-      case ' ':
-      case '\t':
-      case '\n':
-      {
-        buff[i] = '\0';
-        return i+1;
-      }
-        break;
-      //delimeter
-      case ';':
-      case '.':
-      case ',':
-      case '(':
-      case ')':
-      {
-        if(i == 0)
-        {
-          buff[i] = c;
-          i++;
-          buff[i] = '\0';
-          return i;
-        }
-        else
-        {
-          buff[i] = '\0';
-          return i;
-        }
-      }
-        return i;
-      //ambiguous delimeter
-      case '=':
-      case '+':
-      case '-':
-      case '>':
-      case '<':
-      case '!':
-      {
-        if(i == 0)
-        {
-          buff[i] = c;
-          i++;
-          if(s[offset+i] == '=')
-          {
-            buff[i] = '=';
-            i++;
-          }
-          buff[i] = '\0';
-          return i;
-        }
-        else
-        {
-          buff[i] = '\0';
-          return i;
-        }
-      }
-      default:
-        buff[i] = c;
-        i++;
-        break;
-    }
-  }
-  return 0; //to shut the compiler up
-}
-
-/*
-[ COPY | NEW(w,h) | ] ;
-SELECT {SRC} [ FROM {SRC} | ]
-WHERE [{SRC}. | ]{PROPERTY}
-[ < | > | = ] [ [{SRC}. | ]{PROPERTY} | {CONSTANT} ]
-AND ... ;
-OPERATE [ R | G | B | A ] = ;
-*/
-
 const char *query_usage = "WHAT";
 
-#define teq(s) (cmpLower(token,s) == 0)
-#define tok (l = readToken(q,o,token))
-#define commit (o += l)
 #define err(s) { printf("%s",s); exit(1); }
 void *expand(void *src, int cur_n, int size)
 {
@@ -268,6 +134,124 @@ void *expand(void *src, int cur_n, int size)
   }
   return tmp;
 }
+
+void tokenAfterParenExpress(char *q, int o, char *token)
+{
+  int l = 0;
+
+  tok;
+  if(!(teq("("))) err("Expected '('");
+  commit;
+
+  int parens_deep = 1;
+  while(parens_deep)
+  {
+    tok;
+    if(teq("(")) parens_deep++;
+    if(teq(")")) parens_deep--;
+    commit;
+  }
+  tok;
+}
+
+void tokenBetweenParenExpress(char *q, int o, char *token)
+{
+  int l = 0;
+
+  tok;
+  if(!(teq("("))) err("Expected '('");
+  commit;
+
+  tok;
+  if(teq("("))
+  {
+    tokenAfterParenExpress(q,o,token);
+    return;
+  }
+  else
+  {
+    while(!isMiddleBit(token))
+    {
+      commit;
+      tok;
+    }
+  }
+}
+
+
+// WHERE ( X < 5 )
+// [[((x + 5) != 4) AND (2 < 5)] OR ( 2 == y )]
+//                               OR
+//                  AND
+//            !=
+//       +
+//                         <
+//                                      ==
+// [[((x + 5) != 4) AND (2 < 5)] OR ( 2 == y )]
+
+int parseBoolOp(char *q, int o, QueryBoolOperation *boolOp)
+{
+  int orig_offset = o;
+  int l = 0;
+  char token[256];
+
+  tok;
+  if(!teq("(")) err("Expected '('");
+  commit;
+
+  tok;
+  if(teq("("))
+  {
+    tokenBetweenParenExpress(q,o,token);
+    if(isTokenType(token,bool_operation_tokens))
+    {
+           if(teq("AND")) boolOp->type = QUERY_BOOL_OPERATION_TYPE_AND;
+      else if(teq("OR"))  boolOp->type = QUERY_BOOL_OPERATION_TYPE_OR;
+      else err("Expected AND|OR");
+
+      boolOp->a.type = QUERY_BOOL_EXPRESSION_TYPE_BOOL_OPERATION;
+      boolOp->a.boolOp = malloc(sizeof(QueryBoolOperation));
+      l = parseBoolOp(q,o,boolOp->a.boolOp);
+      commit;
+    }
+    else if(isTokenType(t,bool_expression_tokens))
+    {
+      boolOp->type = QUERY_BOOL_OPERATION_TYPE_NONE;
+      l = parseBoolExp(q,o,&boolOp->a);
+      commit;
+    }
+    else if(isTokenType(t,val_expression_tokens))
+    {
+    }
+    else err("Expected MiddleBit");
+  }
+
+  tok;
+  commit;
+
+  tok;
+  if(teq("("))
+  {
+    tokenBetweenParenExpress(q,o,token);
+    if(isTokenType(token,bool_operation_tokens))
+    {
+      boolOp->a.type = QUERY_BOOL_EXPRESSION_TYPE_BOOL_OPERATION;
+      boolOp->a.boolOp = malloc(sizeof(QueryBoolOperation));
+      l = parseBoolOp(q,o,boolOp->a.boolOp);
+      commit;
+    }
+    else if(isTokenType(t,bool_expression_tokens))
+    {
+      l = parseBoolExp(q,o,&boolOp->a);
+      commit;
+    }
+    else err("Expected MiddleBit");
+  }
+
+
+  return o-orig_offset;
+}
+
 Query parseQuery(char *q)
 {
   Query query;
@@ -298,6 +282,7 @@ Query parseQuery(char *q)
       if(!teq(")")) err("Expected ')'");
       commit; tok;
       if(!teq(";")) err("Expected ';'");
+      commit;
     }
     else if(teq("select"))
     {
@@ -325,7 +310,73 @@ Query parseQuery(char *q)
       tok;
       if(teq("select"))
       {
+        commit;
       }
+      else
+      {
+        pro->nselects--;
+        reading_selects = 0;
+        continue;
+      }
+
+      tok;
+      if(teq("IN"))
+      {
+        commit;
+        sel->selecting = QUERY_SRC_IN;
+      }
+      else if(teq("OUT"))
+      {
+        commit;
+        sel->selecting = QUERY_SRC_OUT;
+      }
+      else
+      {
+        sel->selecting = QUERY_SRC_IN;
+      }
+
+      tok;
+      if(teq("FROM"))
+      {
+        commit; tok;
+        if(teq("IN"))
+        {
+          commit;
+          sel->reference = QUERY_SRC_IN;
+        }
+        else if(teq("OUT"))
+        {
+          commit;
+          sel->reference = QUERY_SRC_OUT;
+        }
+        else
+        {
+          err("Expected 'SRC'");
+        }
+      }
+      else
+      {
+        sel->reference = sel->selecting;
+      }
+
+      tok;
+      if(!teq("WHERE")) err("Expected 'WHERE'");
+      commit;
+
+      //BOOL OPERATIONS
+      parseBoolOp(query,o,&sel->boolOp);
+    }
+
+/*
+[ COPY | NEW(w,h) | ] ;
+SELECT [ {SRC} | ] [ FROM {SRC} | ]
+WHERE [{SRC}. | ]{PROPERTY}
+[ < | > | = ] [ [{SRC}. | ]{PROPERTY} | {CONSTANT} ]
+AND ... ;
+OPERATE [ R | G | B | A ] = ;
+*/
+
+      commit;
     }
 
     //OPERATIONS
