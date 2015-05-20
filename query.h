@@ -360,10 +360,21 @@ Query parseQuery(char *q)
       }
 
       tok;
-      if(!teq("WHERE")) err("Expected 'WHERE'");
+      if(!teq("WHERE"))
+      {
+        if(!teq(";")) err("Expected 'WHERE'");
+        else
+        {
+          commit;
+          continue;
+        }
+      }
       commit;
 
       //BOOL OPERATIONS
+      //X
+      //X AND Y
+      //X AND Y AND Z
       parseBoolOp(query,o,&sel->boolOp);
     }
 
