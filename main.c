@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <stdlib.h> //malloc
+#include <stdio.h>  //printf, fread, fwrite
+#include <string.h> //memcpy
+#include <errno.h>  //errno
 
 #include "dotypes.h"
 
@@ -77,6 +77,7 @@ void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
 
 int main(int argc, char **argv)
 {
+  init();
   //Read args
   char *infile = 0;
   char *outfile = 0;

@@ -1,7 +1,6 @@
 #ifndef _QUERY_H_
 #define _QUERY_H_
 
-#include <string.h>
 #include "str.h"
 #include "token.h"
 
@@ -54,14 +53,6 @@ typedef enum
   QUERY_VALUE_TYPE_COUNT
 } QUERY_VALUE_TYPE;
 
-/*
-
-QEP:
-QEP T(P) QEP+1
-QEP+1
-
-*/
-
 typedef struct QueryExpression
 {
   QUERY_OPERATION_TYPE type;
@@ -98,7 +89,6 @@ typedef struct Query
 
 const char *query_usage = "WHAT";
 
-/*
 #define err(s) { printf("%s",s); exit(1); }
 void *expand(void *src, int cur_n, int size)
 {
@@ -130,45 +120,49 @@ void tokenAfterParenExpress(char *q, int o, char *token)
   tok;
 }
 
-void tokenBetweenParenExpress(char *q, int o, char *token)
-{
-  int l = 0;
-
-  tok;
-  if(!(teq("("))) err("Expected '('");
-  commit;
-
-  tok;
-  if(teq("("))
-  {
-    tokenAfterParenExpress(q,o,token);
-    return;
-  }
-  else
-  {
-    while(!isMiddleBit(token))
-    {
-      commit;
-      tok;
-    }
-  }
-}
-
-int tokenInRange(char *q, int s, int e, char *t)
+int tokenLevelInRange(char *q, int s, int e, int level)
 {
   tokinit;
   o = s;
 
-  tok;
-  if(teq(t)) return 1;
+  while(o < e)
+  {
+    tok;
+    if(teq("("))
+    {
+      commit;
 
+      int n_parens = 1;
+      while(n_parens > 0 && o < e)
+      {
+        tok;
+        if(teq("(")) n_parens++;
+        if(teq(")")) n_parens--;
+        commit;
+      }
+    }
+    else
+    {
+      if(isTokenType(token, query_operation_tokens_of_oo_lvl[level]))
+      return 1;
+      commit;
+    }
+  }
 
+  return 0;
 }
 
 int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp)
 {
   tokinit;
   o = s;
+
+  int exists;
+  if((exists = tokenLevelInRange(q,s,e,level)))
+  {
+    QueryExpression *qe = malloc(sizeof(QueryExpression));
+    parseExpression(q, s, exists, level, qe);
+  }
 
   switch(level)
   {
@@ -193,74 +187,12 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp)
     default:
       break;
   }
-}
-
-int parseBoolOp(char *q, int o, QueryBoolOperation *boolOp)
-{
-  tokinit;
-  int orig_offset = o;
-  int l = 0;
-  char token[256];
-
-  tok;
-  if(!teq("(")) err("Expected '('");
-  commit;
-
-  tok;
-  if(teq("("))
-  {
-    tokenBetweenParenExpress(q,o,token);
-    if(isTokenType(token,bool_operation_tokens))
-    {
-           if(teq("AND")) boolOp->type = QUERY_BOOL_OPERATION_TYPE_AND;
-      else if(teq("OR"))  boolOp->type = QUERY_BOOL_OPERATION_TYPE_OR;
-      else err("Expected AND|OR");
-
-      boolOp->a.type = QUERY_BOOL_EXPRESSION_TYPE_BOOL_OPERATION;
-      boolOp->a.boolOp = malloc(sizeof(QueryBoolOperation));
-      l = parseBoolOp(q,o,boolOp->a.boolOp);
-      commit;
-    }
-    else if(isTokenType(t,bool_expression_tokens))
-    {
-      boolOp->type = QUERY_BOOL_OPERATION_TYPE_NONE;
-      l = parseBoolExp(q,o,&boolOp->a);
-      commit;
-    }
-    else if(isTokenType(t,val_expression_tokens))
-    {
-    }
-    else err("Expected MiddleBit");
-  }
-
-  tok;
-  commit;
-
-  tok;
-  if(teq("("))
-  {
-    tokenBetweenParenExpress(q,o,token);
-    if(isTokenType(token,bool_operation_tokens))
-    {
-      boolOp->a.type = QUERY_BOOL_EXPRESSION_TYPE_BOOL_OPERATION;
-      boolOp->a.boolOp = malloc(sizeof(QueryBoolOperation));
-      l = parseBoolOp(q,o,boolOp->a.boolOp);
-      commit;
-    }
-    else if(isTokenType(t,bool_expression_tokens))
-    {
-      l = parseBoolExp(q,o,&boolOp->a);
-      commit;
-    }
-    else err("Expected MiddleBit");
-  }
-
-
-  return o-orig_offset;
+  return 0;
 }
 
 Query parseQuery(char *q)
 {
+/*
   Query query;
   tokinit;
 
@@ -397,9 +329,9 @@ Query parseQuery(char *q)
   }
 
   printf("token :%s",token);
-  return query;
+  */
+  return *((Query *)malloc(sizeof(Query)));
 }
-*/
 
 #endif
 

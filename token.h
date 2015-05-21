@@ -32,7 +32,7 @@ const char *query_operation_tokens[] =
   ""
 };
 const int QUERY_NUM_OO_LEVELS = 8;
-const int query_operation_token_oo_levels[] = //manually keep in sync!
+const int query_operation_token_oo_lvls[] = //manually keep in sync!
 {
   0, //"or",
   1, //"and",
@@ -50,7 +50,7 @@ const int query_operation_token_oo_levels[] = //manually keep in sync!
   7, //"%",
   0  //""
 };
-char **query_operation_token_oo_of_lvl[QUERY_NUM_OO_LEVELS];
+char **query_operation_tokens_of_oo_lvl[QUERY_NUM_OO_LEVELS];
 const char *query_property_tokens[] =
 {
   "row",
@@ -65,21 +65,22 @@ const char *query_property_tokens[] =
 void init()
 {
   //for brevety
-  const int *ls = query_operation_token_oo_levels;
-  char ***lls = &query_operation_token_oo_of_lvl[0];
+  const int *ls = query_operation_token_oo_lvls;
+  char ***lls = &query_operation_tokens_of_oo_lvl[0];
 
-  int si;
-  int ci;
-  for(ci = 0; ci < QUERY_NUM_OO_LEVELS; ci++)
+  int c  = 0;
+  int si = 0;
+  int ci = 0;
+  for(c = 0; c < QUERY_NUM_OO_LEVELS; c++)
   {
-    if(ls[ci] != ls[si])
-    {
-      lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
-      for(int j = 0; j < ci-si; j++)
-        lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
-      lls[ls[si]][ci-si] = 0;
-      si = ci;
-    }
+    while(ls[ci] == c) ci++;
+
+    lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
+    for(int j = 0; j < ci-si; j++)
+      lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
+    lls[ls[si]][ci-si] = 0;
+
+    si = ci;
   }
 }
 
