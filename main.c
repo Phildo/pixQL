@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   if(!outfile) ERROR(1,"%s\nNo output file specified.",usage);
   if(!query)   ERROR(1,"%s\nNo query specified.",      usage);
 
-  Query q;
+  //Query q;
   Bitmap b;
   BitmapFileHeader *bh = &b.bitmap_file_header;
   DIBHeader *dh = &b.dib_header;
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
   Pix *IN_DATA;
   Pix *OUT_DATA;
 
-  q = parseQuery(query);
+  //q = parseQuery(query);
 
   //INPUT
   FILE *in;

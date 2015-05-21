@@ -22,36 +22,24 @@ typedef enum
 } QUERY_SRC;
 typedef enum
 {
-  QUERY_BOOL_OPERATION_TYPE_INVALID,
-  QUERY_BOOL_OPERATION_TYPE_AND,
-  QUERY_BOOL_OPERATION_TYPE_OR,
-  QUERY_BOOL_OPERATION_TYPE_NOT,
-  QUERY_BOOL_OPERATION_TYPE_NONE,
-  QUERY_BOOL_OPERATION_TYPE_COUNT
-} QUERY_BOOL_OPERATION_TYPE;
-typedef enum
-{
-  QUERY_BOOL_EXPRESSION_TYPE_INVALID,
-  QUERY_BOOL_EXPRESSION_TYPE_BOOL_OPERATION,
-  QUERY_BOOL_EXPRESSION_TYPE_LT,
-  QUERY_BOOL_EXPRESSION_TYPE_LTE,
-  QUERY_BOOL_EXPRESSION_TYPE_EQ,
-  QUERY_BOOL_EXPRESSION_TYPE_NE,
-  QUERY_BOOL_EXPRESSION_TYPE_GTE,
-  QUERY_BOOL_EXPRESSION_TYPE_GT,
-  QUERY_BOOL_EXPRESSION_TYPE_COUNT
-} QUERY_BOOL_EXPRESSION_TYPE;
-typedef enum
-{
-  QUERY_VALUE_EXPRESSION_TYPE_INVALID,
-  QUERY_VALUE_EXPRESSION_TYPE_VALUE,
-  QUERY_VALUE_EXPRESSION_TYPE_ADD,
-  QUERY_VALUE_EXPRESSION_TYPE_SUB,
-  QUERY_VALUE_EXPRESSION_TYPE_MUL,
-  QUERY_VALUE_EXPRESSION_TYPE_DIV,
-  QUERY_VALUE_EXPRESSION_TYPE_MOD,
-  QUERY_VALUE_EXPRESSION_TYPE_COUNT
-} QUERY_VALUE_EXPRESSION_TYPE;
+  QUERY_OPERATION_TYPE_INVALID,
+  QUERY_OPERATION_TYPE_AND,
+  QUERY_OPERATION_TYPE_OR,
+  QUERY_OPERATION_TYPE_NOT,
+  QUERY_OPERATION_TYPE_EQ,
+  QUERY_OPERATION_TYPE_NE,
+  QUERY_OPERATION_TYPE_LT,
+  QUERY_OPERATION_TYPE_LTE,
+  QUERY_OPERATION_TYPE_GTE,
+  QUERY_OPERATION_TYPE_GT,
+  QUERY_OPERATION_TYPE_SUB,
+  QUERY_OPERATION_TYPE_ADD,
+  QUERY_OPERATION_TYPE_DIV,
+  QUERY_OPERATION_TYPE_MUL,
+  QUERY_OPERATION_TYPE_MOD,
+  QUERY_OPERATION_TYPE_VALUE,
+  QUERY_OPERATION_TYPE_COUNT
+} QUERY_OPERATION_TYPE;
 typedef enum
 {
   QUERY_VALUE_TYPE_INVALID,
@@ -66,44 +54,31 @@ typedef enum
   QUERY_VALUE_TYPE_COUNT
 } QUERY_VALUE_TYPE;
 
-//listed in reverse-depth order to minimize forward decl hell
+/*
+
+QEP:
+QEP T(P) QEP+1
+QEP+1
+
+*/
+
+typedef struct QueryExpression
+{
+  QUERY_OPERATION_TYPE type;
+  struct QueryExpression *a;
+  struct QueryExpression *b;
+} QueryExpression;
 typedef struct QueryOperation
 {
-  QUERY_VALUE_TYPE type; //cannot be .._TYPE_CONSTANT or .._TYPE_EXPRESSION
+  QUERY_SRC selecting;
+  QUERY_SRC reference;
+  QueryExpression exp;
 } QueryOperation;
-struct QueryValExpression;
-typedef struct QueryValue
-{
-  QUERY_VALUE_TYPE type;
-  int constant;
-  QUERY_SRC src;
-  struct QueryValExpression *expression;
-} QueryValue;
-typedef struct QueryValExpression
-{
-  QUERY_VALUE_EXPRESSION_TYPE type;
-  QueryValue a;
-  QueryValue b;
-} QueryValExpression;
-struct QueryBoolOperation;
-typedef struct QueryBoolExpression
-{
-  QUERY_BOOL_EXPRESSION_TYPE type;
-  QueryValExpression a;
-  QueryValExpression b;
-  struct QueryBoolOperation *boolOp;
-} QueryBoolExpression;
-typedef struct QueryBoolOperation
-{
-  QUERY_BOOL_OPERATION_TYPE type;
-  QueryBoolExpression a;
-  QueryBoolExpression b;
-} QueryBoolOperation;
 typedef struct QuerySelection
 {
   QUERY_SRC selecting;
   QUERY_SRC reference;
-  QueryBoolOperation boolOp;
+  QueryExpression exp;
 } QuerySelection;
 typedef struct QueryProcedure
 {
@@ -123,6 +98,7 @@ typedef struct Query
 
 const char *query_usage = "WHAT";
 
+/*
 #define err(s) { printf("%s",s); exit(1); }
 void *expand(void *src, int cur_n, int size)
 {
@@ -178,19 +154,50 @@ void tokenBetweenParenExpress(char *q, int o, char *token)
   }
 }
 
+int tokenInRange(char *q, int s, int e, char *t)
+{
+  tokinit;
+  o = s;
 
-// WHERE ( X < 5 )
-// [[((x + 5) != 4) AND (2 < 5)] OR ( 2 == y )]
-//                               OR
-//                  AND
-//            !=
-//       +
-//                         <
-//                                      ==
-// [[((x + 5) != 4) AND (2 < 5)] OR ( 2 == y )]
+  tok;
+  if(teq(t)) return 1;
+
+
+}
+
+int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp)
+{
+  tokinit;
+  o = s;
+
+  switch(level)
+  {
+    case 0: // or
+      break;
+    case 1: // and
+      break;
+    case 2: // not
+      break;
+    case 3: // = | !=
+      break;
+    case 4: // < | <= | >= | >
+      break;
+    case 5: // - | +
+      break;
+    case 6: // / | *
+      break;
+    case 7: // %
+      break;
+    case 8: // ( )
+      break;
+    default:
+      break;
+  }
+}
 
 int parseBoolOp(char *q, int o, QueryBoolOperation *boolOp)
 {
+  tokinit;
   int orig_offset = o;
   int l = 0;
   char token[256];
@@ -255,9 +262,7 @@ int parseBoolOp(char *q, int o, QueryBoolOperation *boolOp)
 Query parseQuery(char *q)
 {
   Query query;
-  char token[256];
-  int o = 0;
-  int l = 0;
+  tokinit;
 
   //MODE
   if(query.mode == QUERY_INIT_MODE_INVALID)
@@ -378,15 +383,6 @@ Query parseQuery(char *q)
       parseBoolOp(query,o,&sel->boolOp);
     }
 
-/*
-[ COPY | NEW(w,h) | ] ;
-SELECT [ {SRC} | ] [ FROM {SRC} | ]
-WHERE [{SRC}. | ]{PROPERTY}
-[ < | > | = ] [ [{SRC}. | ]{PROPERTY} | {CONSTANT} ]
-AND ... ;
-OPERATE [ R | G | B | A ] = ;
-*/
-
       commit;
     }
 
@@ -403,6 +399,7 @@ OPERATE [ R | G | B | A ] = ;
   printf("token :%s",token);
   return query;
 }
+*/
 
 #endif
 

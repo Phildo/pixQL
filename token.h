@@ -1,46 +1,58 @@
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 
-const char *init_tokens
-[
-  "NEW",
-  "COPY",
-  "BLANK"
-];
-const char *src_tokens
-[
-  "IN",
-  "OUT",
+const char *query_init_tokens[] =
+{
+  "new",
+  "copy",
+  "blank"
+};
+const char *query_src_tokens[] =
+{
+  "in",
+  "out",
   ""
-];
-const char *bool_operation_tokens
-[
-  "AND",
-  "OR",
-  "NOT",
-  ""
-];
-const char *bool_expression_tokens
-[
-  "<",
-  "<=",
+};
+const char *query_operation_tokens[] =
+{
+  "and",
+  "or",
+  "not",
   "=",
   "!=",
+  "<",
+  "<=",
   ">=",
   ">",
-  ""
-];
-const char *val_expression_tokens
-[
-  "+",
   "-",
-  "*",
+  "+",
   "/",
+  "*",
   "%",
   ""
-];
-const char *property_tokens
-[
+};
+const int QUERY_NUM_OO_LEVELS = 8;
+const int query_operation_token_oo_levels[] = //manually keep in sync!
+{
+  0, //"or",
+  1, //"and",
+  2, //"not",
+  3, //"=",
+  3, //"!=",
+  4, //"<",
+  4, //"<=",
+  4, //">=",
+  4, //">",
+  5, //"-",
+  5, //"+",
+  6, //"/",
+  6, //"*",
+  7, //"%",
+  0  //""
+};
+char **query_operation_token_oo_of_lvl[QUERY_NUM_OO_LEVELS];
+const char *query_property_tokens[] =
+{
   "row",
   "col",
   "r",
@@ -48,24 +60,38 @@ const char *property_tokens
   "b",
   "a",
   ""
-];
+};
+
+void init()
+{
+  //for brevety
+  const int *ls = query_operation_token_oo_levels;
+  char ***lls = &query_operation_token_oo_of_lvl[0];
+
+  int si;
+  int ci;
+  for(ci = 0; ci < QUERY_NUM_OO_LEVELS; ci++)
+  {
+    if(ls[ci] != ls[si])
+    {
+      lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
+      for(int j = 0; j < ci-si; j++)
+        lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
+      lls[ls[si]][ci-si] = 0;
+      si = ci;
+    }
+  }
+}
 
 int isTokenType(char *t, char **type)
 {
-  int i;
+  int i = 0;
   while(*type[i] != '\0')
   {
-    if(cmpLower(t,type[i]) == 0)
-      return 1;
+    if(cmpLower(t,type[i]) == 0) return 1;
+    i++;
   }
   return 0;
-}
-int isMiddleBit(char *t)
-{
-  return
-    isTokenType(t,bool_operation_tokens) ||
-    isTokenType(t,bool_expression_tokens) ||
-    isTokenType(t,val_expression_tokens);
 }
 
 int readToken(char *s, int offset, char *buff)
@@ -149,12 +175,7 @@ int readToken(char *s, int offset, char *buff)
   return 0; //to shut the compiler up
 }
 
-/*
-//defines assume:
-int o = 0; //current offset
-int l = 0; //length of read
-char token[256];
-*/
+#define tokinit int o = 0; int l = 0; char token[256];
 #define teq(s) (cmpLower(token,s) == 0)
 #define tok (l = readToken(q,o,token))
 #define commit (o += l)
