@@ -18,6 +18,21 @@ char toLower(char c)
     return c - ('A'-'a');
   return c;
 }
+int cmp(char *a, char *b)
+{
+  int i = 0;
+  int d;
+  while(a[i] != '\0' && b[i] != '\0')
+  {
+    d = a-b;
+    if(d != 0) return d;
+    i++;
+  }
+  if(a[i] == b[i]) return 0;
+  if(a[i] == '\0') return -1;
+  if(b[i] == '\0') return 1;
+  return 0; //shut up compiler
+}
 int cmpLower(char *a, char *b)
 {
   int i = 0;

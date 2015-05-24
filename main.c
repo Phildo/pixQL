@@ -4,25 +4,15 @@
 #include <errno.h>  //errno
 
 #include "dotypes.h"
+#include "str.h"
 
 #include "bitmap.h"
 #include "query.h"
 
 #define ERROR(n,err, ...) ({ fprintf(stderr,err, ##__VA_ARGS__); printf("\n"); exit(n); })
 
-int cmp(char *a, char *b)
-{
-  while(!(*a == '\0' && *b == '\0'))
-  {
-         if(*a > *b) return -1;
-    else if(*a < *b) return 1;
-    a++; b++;
-  }
-  return 0;
-}
-
 const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
-const char *invalid = "Invalid file";
+const char *invalid = "Invalid file- file does not conform to bitmap spec";
 
 typedef struct Pix
 {
@@ -78,22 +68,24 @@ void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
 int main(int argc, char **argv)
 {
   init();
+
   //Read args
-  char *infile = 0;
-  char *outfile = 0;
-  char *query = 0;
+  char *infile_str = 0;
+  char *outfile_str = 0;
+  char *query_str = 0;
   for(int i = 0; i < argc; i++)
   {
-         if(cmp(argv[i],"-i") == 0) infile  = argv[++i];
-    else if(cmp(argv[i],"-o") == 0) outfile = argv[++i];
-    else                            query   = argv[i];
+         if(cmp(argv[i],"-i") == 0) infile_str  = argv[++i];
+    else if(cmp(argv[i],"-o") == 0) outfile_str = argv[++i];
+    else                            query_str   = argv[i];
   }
 
-  if(!infile)  ERROR(1,"%s\nNo input file specified.", usage);
-  if(!outfile) ERROR(1,"%s\nNo output file specified.",usage);
-  if(!query)   ERROR(1,"%s\nNo query specified.",      usage);
+  if(!infile_str)  ERROR(1,"%s\nNo input file specified.", usage);
+  if(!outfile_str) ERROR(1,"%s\nNo output file specified.",usage);
+  if(!query_str)   ERROR(1,"%s\nNo query specified.",      usage);
 
-  //Query q;
+  Query query;
+  QueryError err;
   Bitmap b;
   BitmapFileHeader *bh = &b.bitmap_file_header;
   DIBHeader *dh = &b.dib_header;
@@ -102,11 +94,12 @@ int main(int argc, char **argv)
   Pix *IN_DATA;
   Pix *OUT_DATA;
 
-  //q = parseQuery(query);
+  int l = parseQuery(query_str, &query, &err);
+  if(l == -1) ERROR(1,"There was an error");
 
   //INPUT
   FILE *in;
-  if(!(in  = fopen(infile,  "r"))) ERROR(1,"Can't open input file- %s",infile);
+  if(!(in = fopen(infile_str,  "r"))) ERROR(1,"Can't open input file- %s",infile_str);
 
   //bitmap_header
   #define READFIELD(field,fp) if(sizeof(field) != fread(&field, sizeof(byte), sizeof(field), fp)) ERROR(1,"%s",invalid);
@@ -161,7 +154,7 @@ int main(int argc, char **argv)
 
   //OUTPUT
   FILE *out;
-  if(!(out = fopen(outfile, "w"))) ERROR(1,"Can't open output file- %s",outfile);
+  if(!(out = fopen(outfile_str, "w"))) ERROR(1,"Can't open output file- %s",outfile_str);
 
   byte *indata = malloc(bh->size);
   fseek(in, 0, SEEK_SET);

@@ -95,6 +95,11 @@ int isTokenType(char *t, char **type)
   return 0;
 }
 
+int isTokenLevel(char *t, int l)
+{
+  return isTokenType(t, query_operation_tokens_of_oo_lvl[l]);
+}
+
 int readToken(char *s, int offset, char *buff)
 {
   int i = 0;
@@ -180,6 +185,52 @@ int readToken(char *s, int offset, char *buff)
 #define teq(s) (cmpLower(token,s) == 0)
 #define tok (l = readToken(q,o,token))
 #define commit (o += l)
+
+int tokenAfterParenExpress(char *q, int s, int e)
+{
+  tokinit;
+  o = s;
+
+  tok;
+  if(!(teq("("))) return -1;//err("Expected '('");
+  commit;
+
+  int n_parens = 1;
+  while(n_parens > 0 && o < e)
+  {
+    tok;
+    if(teq("(")) n_parens++;
+    if(teq(")")) n_parens--;
+    commit;
+  }
+  return o;
+}
+
+int lastTokenLevelInRange(char *q, int s, int e, int level)
+{
+  tokinit;
+  o = s;
+
+  int last = -1;
+
+  while(o < e)
+  {
+    tok;
+    if(teq("("))
+    {
+      l = tokenAfterParenExpress(q,o,e);
+      commit;
+    }
+    else
+    {
+      if(isTokenType(token, query_operation_tokens_of_oo_lvl[level]))
+      last = o;
+      commit;
+    }
+  }
+
+  return last;
+}
 
 #endif
 

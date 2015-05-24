@@ -4,96 +4,12 @@
 #include "str.h"
 #include "token.h"
 
-typedef enum
-{
-  QUERY_INIT_MODE_INVALID,
-  QUERY_INIT_MODE_NEW,
-  QUERY_INIT_MODE_COPY,
-  QUERY_INIT_MODE_BLANK,
-  QUERY_INIT_MODE_COUNT
-} QUERY_INIT_MODE;
-typedef enum
-{
-  QUERY_SRC_INVALID,
-  QUERY_SRC_IN,
-  QUERY_SRC_OUT,
-  QUERY_SRC_COUNT
-} QUERY_SRC;
-typedef enum
-{
-  QUERY_OPERATION_TYPE_INVALID,
-  QUERY_OPERATION_TYPE_AND,
-  QUERY_OPERATION_TYPE_OR,
-  QUERY_OPERATION_TYPE_NOT,
-  QUERY_OPERATION_TYPE_EQ,
-  QUERY_OPERATION_TYPE_NE,
-  QUERY_OPERATION_TYPE_LT,
-  QUERY_OPERATION_TYPE_LTE,
-  QUERY_OPERATION_TYPE_GTE,
-  QUERY_OPERATION_TYPE_GT,
-  QUERY_OPERATION_TYPE_SUB,
-  QUERY_OPERATION_TYPE_ADD,
-  QUERY_OPERATION_TYPE_DIV,
-  QUERY_OPERATION_TYPE_MUL,
-  QUERY_OPERATION_TYPE_MOD,
-  QUERY_OPERATION_TYPE_VALUE,
-  QUERY_OPERATION_TYPE_COUNT
-} QUERY_OPERATION_TYPE;
-typedef enum
-{
-  QUERY_VALUE_TYPE_INVALID,
-  QUERY_VALUE_TYPE_VALUE_EXPRESSION,
-  QUERY_VALUE_TYPE_CONSTANT,
-  QUERY_VALUE_TYPE_ROW,
-  QUERY_VALUE_TYPE_COL,
-  QUERY_VALUE_TYPE_R,
-  QUERY_VALUE_TYPE_G,
-  QUERY_VALUE_TYPE_B,
-  QUERY_VALUE_TYPE_A,
-  QUERY_VALUE_TYPE_COUNT
-} QUERY_VALUE_TYPE;
+#include "query_def.h"
 
-typedef struct QueryExpression
-{
-  QUERY_OPERATION_TYPE type;
-  struct QueryExpression *a;
-  struct QueryExpression *b;
-} QueryExpression;
-typedef struct QueryOperation
-{
-  QUERY_SRC selecting;
-  QUERY_SRC reference;
-  QueryExpression exp;
-} QueryOperation;
-typedef struct QuerySelection
-{
-  QUERY_SRC selecting;
-  QUERY_SRC reference;
-  QueryExpression exp;
-} QuerySelection;
-typedef struct QueryProcedure
-{
-  QuerySelection *selects;
-  int nselects;
-  QueryOperation *operations;
-  int noperations;
-} QueryProcedure;
-typedef struct Query
-{
-  QUERY_INIT_MODE mode;
-  int new_w;
-  int new_h;
-  QueryProcedure *procedures;
-  int nprocedures;
-} Query;
-
-const char *query_usage = "WHAT";
-
-#define err(s) { printf("%s",s); exit(1); }
 void *expand(void *src, int cur_n, int size)
 {
-  void *tmp = malloc(cur_n*(size+1));
-  if(size > 0)
+  void *tmp = malloc((cur_n+1)*size);
+  if(cur_n > 0)
   {
     memcpy(tmp, src, cur_n*size);
     free(src);
@@ -101,67 +17,40 @@ void *expand(void *src, int cur_n, int size)
   return tmp;
 }
 
-void tokenAfterParenExpress(char *q, int o, char *token)
-{
-  int l = 0;
-
-  tok;
-  if(!(teq("("))) err("Expected '('");
-  commit;
-
-  int parens_deep = 1;
-  while(parens_deep)
-  {
-    tok;
-    if(teq("(")) parens_deep++;
-    if(teq(")")) parens_deep--;
-    commit;
-  }
-  tok;
-}
-
-int tokenLevelInRange(char *q, int s, int e, int level)
+int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, QueryError *err)
 {
   tokinit;
   o = s;
 
-  while(o < e)
+  int parsed = 0;
+  int exists;
+  if((exists = lastTokenLevelInRange(q,s,e,level)))
   {
+    qexp->a = malloc(sizeof(QueryExpression));
+    l = parseExpression(q, o, exists, level, qexp->a, err);
+    commit;
     tok;
-    if(teq("("))
+    if(!isTokenLevel(token, level))
     {
-      commit;
-
-      int n_parens = 1;
-      while(n_parens > 0 && o < e)
-      {
-        tok;
-        if(teq("(")) n_parens++;
-        if(teq(")")) n_parens--;
-        commit;
-      }
+      free(qexp->a);
+      qexp->a = 0;
+      o = s;
+      l = 0;
     }
     else
     {
-      if(isTokenType(token, query_operation_tokens_of_oo_lvl[level]))
-      return 1;
       commit;
+      qexp->b = malloc(sizeof(QueryExpression));
+      l = parseExpression(q, o, e, level-1, qexp->b, err);
+      commit;
+
+      parsed = 1;
     }
   }
 
-  return 0;
-}
-
-int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp)
-{
-  tokinit;
-  o = s;
-
-  int exists;
-  if((exists = tokenLevelInRange(q,s,e,level)))
+  if(!parsed)
   {
-    QueryExpression *qe = malloc(sizeof(QueryExpression));
-    parseExpression(q, s, exists, level, qe);
+    l = parseExpression(q, s, e, level-1, qexp, err);
   }
 
   switch(level)
@@ -190,51 +79,127 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp)
   return 0;
 }
 
-Query parseQuery(char *q)
+int parseSelection(char *q, int s, int e, QuerySelection *sel, QueryError *err)
 {
-/*
-  Query query;
   tokinit;
+  o = s;
 
-  //MODE
-  if(query.mode == QUERY_INIT_MODE_INVALID)
+  tok;
+  if(!teq("select")) return -1;
+  commit;
+
+  tok;
+  if(teq("IN"))
   {
-    tok;
-    if(teq("copy"))
-    {
-      query.mode = QUERY_INIT_MODE_COPY;
-      commit;
-    }
-    else if(teq("new"))
-    {
-      query.mode = QUERY_INIT_MODE_NEW;
-      commit; tok;
-      if(!teq("(")) err("Expected '('");
-      commit; tok;
-      if(!intFromDec(token,&query.new_w)) err("Expected int");
-      commit; tok;
-      if(!teq(",")) err("Expected ','");
-      commit; tok;
-      if(!intFromDec(token,&query.new_h)) err("Expected int");
-      if(!teq(")")) err("Expected ')'");
-      commit; tok;
-      if(!teq(";")) err("Expected ';'");
-      commit;
-    }
-    else if(teq("select"))
-    {
-      query.mode = QUERY_INIT_MODE_NEW;
-    }
-    else err(query_usage);
+    sel->selecting = QUERY_SRC_IN;
+    commit;
   }
+  else if(teq("OUT"))
+  {
+    sel->selecting = QUERY_SRC_OUT;
+    commit;
+  }
+  else
+  {
+    sel->selecting = QUERY_SRC_IN;
+  }
+
+  tok;
+  if(teq("FROM"))
+  {
+    commit; tok;
+    if(teq("IN"))
+    {
+      sel->reference = QUERY_SRC_IN;
+      commit;
+    }
+    else if(teq("OUT"))
+    {
+      sel->reference = QUERY_SRC_OUT;
+      commit;
+    }
+    else
+    {
+      return -1; //err("Expected 'SRC'");
+    }
+  }
+  else
+  {
+    sel->reference = sel->selecting;
+  }
+
+  tok;
+  if(!teq("WHERE"))
+  {
+    if(!teq(";")) return -1; //err("Expected 'WHERE'");
+    else
+    {
+      commit;
+      return o;
+    }
+  }
+  commit;
+
+  l = parseExpression(q, o, e, 0, &sel->exp, err);
+  commit;
+  return o;
+}
+
+int parseMode(char *q, int s, int e, Query *query, QueryError *err)
+{
+  tokinit;
+  o = s;
+
+  tok;
+  if(teq("copy"))
+  {
+    query->mode = QUERY_INIT_MODE_COPY;
+    commit;
+    return o;
+  }
+
+  if(teq("new"))
+  {
+    query->mode = QUERY_INIT_MODE_NEW;
+    commit; tok;
+    if(!teq("(")) return -1;//err("Expected '('");
+    commit; tok;
+    if(!intFromDec(token,&query->new_w)) return -1;//err("Expected int");
+    commit; tok;
+    if(!teq(",")) return -1;//err("Expected ','");
+    commit; tok;
+    if(!intFromDec(token,&query->new_h)) return -1;//err("Expected int");
+    if(!teq(")")) return -1;//err("Expected ')'");
+    commit; tok;
+    if(!teq(";")) return -1;//err("Expected ';'");
+    commit;
+    return o;
+  }
+
+  if(teq("select"))
+  {
+    query->mode = QUERY_INIT_MODE_NEW;
+    return 0;
+  }
+
+  return -1;
+}
+
+int parseQuery(char *q, Query *query, QueryError *err)
+{
+  tokinit;
+  int qlen = strLen(q);
+
+  l = parseMode(q, o, qlen, query, err);
+  commit;
 
   //PROCEDURES
   int reading_procedures = 1;
   while(reading_procedures)
   {
-    query.procedures = expand(query.procedures, query.nprocedures, sizeof(QueryProcedure));
-    query.nprocedures++;
-    QueryProcedure *pro = &query.procedures[query.nprocedures-1];
+    query->procedures = expand(query->procedures, query->nprocedures, sizeof(QueryProcedure));
+    query->nprocedures++;
+    QueryProcedure *pro = &query->procedures[query->nprocedures-1];
 
     //SELECTS
     int reading_selects = 1;
@@ -244,80 +209,20 @@ Query parseQuery(char *q)
       pro->nselects++;
       QuerySelection *sel = &pro->selects[pro->nselects-1];
 
-      tok;
-      if(teq("select"))
-      {
-        commit;
-      }
-      else
+      l = parseSelection(q, o, qlen, sel, err);
+      if(l == -1)
       {
         pro->nselects--;
         reading_selects = 0;
-        continue;
       }
-
-      tok;
-      if(teq("IN"))
-      {
-        commit;
-        sel->selecting = QUERY_SRC_IN;
-      }
-      else if(teq("OUT"))
-      {
-        commit;
-        sel->selecting = QUERY_SRC_OUT;
-      }
-      else
-      {
-        sel->selecting = QUERY_SRC_IN;
-      }
-
-      tok;
-      if(teq("FROM"))
-      {
-        commit; tok;
-        if(teq("IN"))
-        {
-          commit;
-          sel->reference = QUERY_SRC_IN;
-        }
-        else if(teq("OUT"))
-        {
-          commit;
-          sel->reference = QUERY_SRC_OUT;
-        }
-        else
-        {
-          err("Expected 'SRC'");
-        }
-      }
-      else
-      {
-        sel->reference = sel->selecting;
-      }
-
-      tok;
-      if(!teq("WHERE"))
-      {
-        if(!teq(";")) err("Expected 'WHERE'");
-        else
-        {
-          commit;
-          continue;
-        }
-      }
-      commit;
-
-      //BOOL OPERATIONS
-      //X
-      //X AND Y
-      //X AND Y AND Z
-      parseBoolOp(query,o,&sel->boolOp);
+      else commit;
     }
 
-      commit;
-    }
+    //to get rid of 'unused' compiler warning
+    tok;
+    commit;
 
+/*
     //OPERATIONS
     int reading_operations = 1;
     while(reading_operations)
@@ -326,11 +231,10 @@ Query parseQuery(char *q)
       pro->noperations++;
       QueryOperation *op = &pro->operations[pro->noperations-1];
     }
+*/
   }
 
-  printf("token :%s",token);
-  */
-  return *((Query *)malloc(sizeof(Query)));
+  return o;
 }
 
 #endif
