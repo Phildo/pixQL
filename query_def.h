@@ -10,16 +10,27 @@ typedef enum
   QUERY_INIT_MODE_INVALID,
   QUERY_INIT_MODE_NEW,
   QUERY_INIT_MODE_COPY,
-  QUERY_INIT_MODE_BLANK,
-  QUERY_INIT_MODE_COUNT
+  QUERY_INIT_MODE_BLANK
 } QUERY_INIT_MODE;
 typedef enum
 {
-  QUERY_SRC_INVALID,
-  QUERY_SRC_IN,
-  QUERY_SRC_OUT,
-  QUERY_SRC_COUNT
-} QUERY_SRC;
+  QUERY_TARGET_INVALID,
+  QUERY_TARGET_IN,
+  QUERY_TARGET_OUT
+} QUERY_TARGET;
+typedef enum
+{
+  QUERY_VALUE_TYPE_INVALID,
+  QUERY_VALUE_TYPE_ROW,
+  QUERY_VALUE_TYPE_COL,
+  QUERY_VALUE_TYPE_R,
+  QUERY_VALUE_TYPE_G,
+  QUERY_VALUE_TYPE_B,
+  QUERY_VALUE_TYPE_A,
+  QUERY_VALUE_TYPE_WIDTH,
+  QUERY_VALUE_TYPE_HEIGHT,
+  QUERY_VALUE_TYPE_CONSTANT
+} QUERY_VALUE_TYPE;
 typedef enum
 {
   QUERY_OPERATION_TYPE_INVALID,
@@ -37,22 +48,8 @@ typedef enum
   QUERY_OPERATION_TYPE_DIV,
   QUERY_OPERATION_TYPE_MUL,
   QUERY_OPERATION_TYPE_MOD,
-  QUERY_OPERATION_TYPE_VALUE,
-  QUERY_OPERATION_TYPE_COUNT
+  QUERY_OPERATION_TYPE_VALUE
 } QUERY_OPERATION_TYPE;
-typedef enum
-{
-  QUERY_VALUE_TYPE_INVALID,
-  QUERY_VALUE_TYPE_VALUE_EXPRESSION,
-  QUERY_VALUE_TYPE_CONSTANT,
-  QUERY_VALUE_TYPE_ROW,
-  QUERY_VALUE_TYPE_COL,
-  QUERY_VALUE_TYPE_R,
-  QUERY_VALUE_TYPE_G,
-  QUERY_VALUE_TYPE_B,
-  QUERY_VALUE_TYPE_A,
-  QUERY_VALUE_TYPE_COUNT
-} QUERY_VALUE_TYPE;
 
 typedef struct
 {
@@ -63,19 +60,30 @@ typedef struct
 typedef struct QueryExpression
 {
   QUERY_OPERATION_TYPE type;
-  struct QueryExpression *a;
-  struct QueryExpression *b;
+  union
+  {
+    struct
+    {
+      struct QueryExpression *a;
+      struct QueryExpression *b;
+    };
+    struct
+    {
+      QUERY_VALUE_TYPE value_type;
+      int value;
+    };
+  };
 } QueryExpression;
 typedef struct
 {
-  QUERY_SRC selecting;
-  QUERY_SRC reference;
+  QUERY_TARGET selecting;
+  QUERY_TARGET reference;
   QueryExpression exp;
 } QueryOperation;
 typedef struct
 {
-  QUERY_SRC selecting;
-  QUERY_SRC reference;
+  QUERY_TARGET selecting;
+  QUERY_TARGET reference;
   QueryExpression exp;
 } QuerySelection;
 typedef struct

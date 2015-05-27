@@ -27,9 +27,11 @@ PIXEL
     B
     A
 
+CONSTANT = WIDTH, HEIGHT, {number}
+
 pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
 
-SRC = IN, OUT
+TARGET = IN, OUT
 
-[ COPY | NEW(w,h) | ] ; SELECT {SRC} [ FROM {SRC} | ] WHERE [{SRC}. | ]{PROPERTY} [ < | > | = ] [ [{SRC}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
+[ [ COPY | BLANK | NEW(w,h) ] ; | ] SELECT {TARGET} [ FROM {TARGET} | ] WHERE [{TARGET}. | ]{PROPERTY} [ < | > | = ] [ [{TARGET}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
 

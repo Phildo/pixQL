@@ -6,11 +6,10 @@ DEBUG = -g
 DEBUGGER = gdb -q
 CFLAGS = -Wall
 LFLAGS = -Wall
-HEADERS=$(wildcard $(CURDIR)/$(SRCDIR)/*.h)
-SOURCES=$(wildcard $(CURDIR)/$(SRCDIR)/*.c)
-
-test: $(OUTFILE)
-	./$(OUTFILE) -i ~/Desktop/test.bmp -o ~/Desktop/out_test.bmp "COPY; SELECT IN FROM IN WHERE IN.r > 25; OPERATE r= IN.row;"
+ALL_HEADERS:=$(wildcard $(CURDIR)/$(SRCDIR)/*.h)
+ALL_SOURCES:=$(wildcard $(CURDIR)/$(SRCDIR)/*.c)
+HEADERS:=$(ALL_HEADERS)
+SOURCES:=$(filter-out %/test.c, $(ALL_SOURCES))
 
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)
@@ -23,4 +22,22 @@ $(OUTFILE).dSYM: $(HEADERS) $(SOURCES)
 
 debug: $(OUTFILE).dSYM
 	$(DEBUGGER) $(OUTFILE)
+
+
+TEST_OUTFILE=pixql_test
+TEST_HEADERS:=$(ALL_HEADERS)
+TEST_SOURCES:=$(filter-out %/main.c, $(ALL_SOURCES))
+
+$(TEST_OUTFILE): $(TEST_HEADERS) $(TEST_SOURCES)
+	$(CC) $(TEST_SOURCES) $(CFLAGS) $(LFLAGS) -o $(TEST_OUTFILE)
+
+test: $(TEST_OUTFILE)
+	./$(TEST_OUTFILE)
+
+$(TEST_OUTFILE).dSYM: $(TEST_HEADERS) $(TEST_SOURCES)
+	$(CC) $(DEBUG) $(TEST_SOURCES) $(CFLAGS) $(LFLAGS) -o $(TEST_OUTFILE)
+
+test_debug: $(TEST_OUTFILE).dSYM
+	$(DEBUGGER) $(TEST_OUTFILE)
+
 

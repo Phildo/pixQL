@@ -1,6 +1,8 @@
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 
+#include <stdlib.h>
+
 const char *query_init_tokens[] =
 {
   "new",
@@ -62,7 +64,7 @@ const char *query_property_tokens[] =
   ""
 };
 
-void init()
+void initTokens()
 {
   //for brevety
   const int *ls = query_operation_token_oo_lvls;
@@ -87,7 +89,7 @@ void init()
 int isTokenType(char *t, char **type)
 {
   int i = 0;
-  while(*type[i] != '\0')
+  while(type[i] != 0)
   {
     if(cmpLower(t,type[i]) == 0) return 1;
     i++;
@@ -186,24 +188,37 @@ int readToken(char *s, int offset, char *buff)
 #define tok (l = readToken(q,o,token))
 #define commit (o += l)
 
-int tokenAfterParenExpress(char *q, int s, int e)
+int closingParen(char *q, int s, int e)
 {
   tokinit;
   o = s;
 
   tok;
   if(!(teq("("))) return -1;//err("Expected '('");
-  commit;
 
   int n_parens = 1;
   while(n_parens > 0 && o < e)
   {
+    commit;
     tok;
     if(teq("(")) n_parens++;
     if(teq(")")) n_parens--;
-    commit;
   }
-  return o;
+  return o-s;
+}
+
+int tokenAfterParenExpress(char *q, int s, int e)
+{
+  tokinit;
+  o = s;
+
+  l = closingParen(q,o,e);
+  commit;
+  tok;
+  if(!(teq(")"))) return -1;//err("Expected ')'");
+  commit;
+
+  return o-s;
 }
 
 int lastTokenLevelInRange(char *q, int s, int e, int level)
@@ -229,7 +244,7 @@ int lastTokenLevelInRange(char *q, int s, int e, int level)
     }
   }
 
-  return last;
+  return last-s;
 }
 
 #endif

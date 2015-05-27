@@ -1,6 +1,5 @@
 #include <stdlib.h> //malloc
 #include <stdio.h>  //printf, fread, fwrite
-#include <string.h> //memcpy
 #include <errno.h>  //errno
 
 #include "dotypes.h"
@@ -67,7 +66,7 @@ void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
 
 int main(int argc, char **argv)
 {
-  init();
+  initTokens();
 
   //Read args
   char *infile_str = 0;
