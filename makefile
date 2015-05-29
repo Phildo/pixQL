@@ -2,7 +2,7 @@ CURDIR = ~/Desktop/pixQL
 SRCDIR = .
 OUTFILE = pixql
 CC = gcc
-DEBUG = -g
+DEBUG = -ggdb3
 DEBUGGER = gdb -q
 CFLAGS = -Wall
 LFLAGS = -Wall
@@ -40,4 +40,6 @@ $(TEST_OUTFILE).dSYM: $(TEST_HEADERS) $(TEST_SOURCES)
 test_debug: $(TEST_OUTFILE).dSYM
 	$(DEBUGGER) $(TEST_OUTFILE)
 
+clean:
+	for f in $(OUTFILE) $(OUTFILE) $(TEST_OUTFILE) $(TEST_OUTFILE) ; do if [ -d $$f ] ; then rm -r $$f ; elif [ -f $$f ] ; then rm $$f ; fi ; done
 

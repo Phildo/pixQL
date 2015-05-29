@@ -1,6 +1,7 @@
 #ifndef _QUERY_H_
 #define _QUERY_H_
 
+#include <stdio.h>
 #include <string.h>
 #include "str.h"
 #include "token.h"
@@ -20,6 +21,7 @@ void *expand(void *src, int cur_n, int size)
 
 int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, QueryError *err)
 {
+  printf("called  w/ level = %d\n",level);
   tokinit;
   o = s;
 
@@ -34,11 +36,13 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
     case 7: // %
     {
       int parsed = 0;
-      int tokloc = lastTokenLevelInRange(q,s,e,level);
-      if(tokloc != -1)
+      l = lastTokenLevelInRange(q,s,e,level);
+      if(l >= 0)
       {
         qexp->a = malloc(sizeof(QueryExpression));
-        l = parseExpression(q, o, tokloc, level, qexp->a, err);
+
+        printf("calling w/ level = %d\n",level);
+        l = parseExpression(q, o, o+l, level, qexp->a, err);
         commit;
         tok;
         if(!isTokenLevel(token, level))
@@ -50,8 +54,23 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
         }
         else
         {
+               if(teq("or")) qexp->type  = QUERY_OPERATION_TYPE_OR;
+          else if(teq("and")) qexp->type = QUERY_OPERATION_TYPE_AND;
+          else if(teq("=")) qexp->type   = QUERY_OPERATION_TYPE_EQ;
+          else if(teq("!=")) qexp->type  = QUERY_OPERATION_TYPE_NE;
+          else if(teq("<")) qexp->type   = QUERY_OPERATION_TYPE_LT;
+          else if(teq("<=")) qexp->type  = QUERY_OPERATION_TYPE_LTE;
+          else if(teq(">=")) qexp->type  = QUERY_OPERATION_TYPE_GTE;
+          else if(teq(">")) qexp->type   = QUERY_OPERATION_TYPE_GT;
+          else if(teq("-")) qexp->type   = QUERY_OPERATION_TYPE_SUB;
+          else if(teq("+")) qexp->type   = QUERY_OPERATION_TYPE_ADD;
+          else if(teq("/")) qexp->type   = QUERY_OPERATION_TYPE_DIV;
+          else if(teq("*")) qexp->type   = QUERY_OPERATION_TYPE_MUL;
+          else if(teq("%")) qexp->type   = QUERY_OPERATION_TYPE_MOD;
+
           commit;
           qexp->b = malloc(sizeof(QueryExpression));
+          printf("calling w/ level = %d\n",level+1);
           l = parseExpression(q, o, e, level+1, qexp->b, err);
           commit;
 
@@ -61,6 +80,7 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
 
       if(!parsed)
       {
+        printf("calling w/ level = %d\n",level+1);
         l = parseExpression(q, s, e, level+1, qexp, err);
         commit;
       }
@@ -74,11 +94,13 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
         commit;
         qexp->type = QUERY_OPERATION_TYPE_NOT;
         qexp->a = malloc(sizeof(QueryExpression));
+        printf("calling w/ level = %d\n",level+1);
         l = parseExpression(q, o, e, level+1, qexp->a, err);
         commit;
       }
       else
       {
+        printf("calling w/ level = %d\n",level+1);
         l = parseExpression(q, o, e, level+1, qexp, err);
         commit;
       }
@@ -91,6 +113,7 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
       {
         int closeparen = closingParen(q, o, e);
         commit;
+        printf("calling w/ level = %d\n",0);
         l = parseExpression(q, o, closeparen, 0, qexp, err); //start level over
         commit;
         tok;
@@ -99,6 +122,7 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
       }
       else
       {
+        printf("calling w/ level = %d\n",level+1);
         l = parseExpression(q, o, e, level+1, qexp, err);
         commit;
       }
@@ -123,12 +147,13 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
         if(intFromDec(token,&a))
           qexp->value = a;
       }
+      commit;
     }
       break;
     default:
       break;
   }
-  return o;
+  return o-s;
 }
 
 int parseSelection(char *q, int s, int e, QuerySelection *sel, QueryError *err)
@@ -187,14 +212,15 @@ int parseSelection(char *q, int s, int e, QuerySelection *sel, QueryError *err)
     else
     {
       commit;
-      return o;
+      return o-s;
     }
   }
   commit;
 
+  printf("calling w/ level = %d\n",0);
   l = parseExpression(q, o, e, 0, &sel->exp, err);
   commit;
-  return o;
+  return o-s;
 }
 
 int parseMode(char *q, int s, int e, Query *query, QueryError *err)
@@ -207,7 +233,10 @@ int parseMode(char *q, int s, int e, Query *query, QueryError *err)
   {
     query->mode = QUERY_INIT_MODE_COPY;
     commit;
-    return o;
+    tok;
+    if(!teq(";")) return -1;
+    commit;
+    return o-s;
   }
 
   if(teq("new"))
@@ -225,7 +254,7 @@ int parseMode(char *q, int s, int e, Query *query, QueryError *err)
     commit; tok;
     if(!teq(";")) return -1;//err("Expected ';'");
     commit;
-    return o;
+    return o-s;
   }
 
   if(teq("select"))
@@ -284,6 +313,7 @@ int parseQuery(char *q, Query *query, QueryError *err)
       QueryOperation *op = &pro->operations[pro->noperations-1];
     }
 */
+    reading_procedures = 0;
   }
 
   return o;

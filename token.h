@@ -17,8 +17,8 @@ const char *query_src_tokens[] =
 };
 const char *query_operation_tokens[] =
 {
-  "and",
   "or",
+  "and",
   "not",
   "=",
   "!=",
@@ -104,18 +104,38 @@ int isTokenLevel(char *t, int l)
 
 int readToken(char *s, int offset, char *buff)
 {
-  int i = 0;
+  int buff_i = 0;
+  int str_i = 0;
   char c;
-  while(1)
+
+  c = '0'; //something other than null
+  while(c != '\0') //blow past leading whitespace
   {
-    c = s[offset+i];
+    c = s[offset+str_i];
+    switch(c)
+    {
+      //whitespace
+      case ' ':
+      case '\t':
+      case '\n':
+        str_i++;
+        break;
+      default:
+        c = '\0';
+        break;
+    }
+  }
+  c = '0'; //something other than null
+  while(c != '\0')
+  {
+    c = s[offset+str_i];
     switch(c)
     {
       //EOS
       case '\0':
       {
-        buff[i] = '\0';
-        return i;
+        buff[buff_i] = '\0';
+        c = '\0';
       }
         break;
       //whitespace
@@ -123,8 +143,8 @@ int readToken(char *s, int offset, char *buff)
       case '\t':
       case '\n':
       {
-        buff[i] = '\0';
-        return i+1;
+        buff[buff_i] = '\0';
+        c = '\0';
       }
         break;
       //delimeter
@@ -134,20 +154,15 @@ int readToken(char *s, int offset, char *buff)
       case '(':
       case ')':
       {
-        if(i == 0)
+        if(buff_i == 0)
         {
-          buff[i] = c;
-          i++;
-          buff[i] = '\0';
-          return i;
+          buff[buff_i++] = c;
+          str_i++;
         }
-        else
-        {
-          buff[i] = '\0';
-          return i;
-        }
+        buff[buff_i] = '\0';
+        c = '\0';
       }
-        return i;
+        break;
       //ambiguous delimeter
       case '=':
       case '+':
@@ -156,31 +171,43 @@ int readToken(char *s, int offset, char *buff)
       case '<':
       case '!':
       {
-        if(i == 0)
+        if(buff_i == 0)
         {
-          buff[i] = c;
-          i++;
-          if(s[offset+i] == '=')
+          buff[buff_i++] = c;
+          str_i++;
+          if(s[offset+str_i+1] == '=')
           {
-            buff[i] = '=';
-            i++;
+            buff[buff_i++] = '=';
+            str_i++;
           }
-          buff[i] = '\0';
-          return i;
         }
-        else
-        {
-          buff[i] = '\0';
-          return i;
-        }
+        buff[buff_i] = '\0';
+        c = '\0';
       }
       default:
-        buff[i] = c;
-        i++;
+        buff[buff_i++] = c;
+        str_i++;
         break;
     }
   }
-  return 0; //to shut the compiler up
+  c = '0'; //some non-null
+  while(c != '\0') //blow past ending whitespace
+  {
+    c = s[offset+str_i];
+    switch(c)
+    {
+      //whitespace
+      case ' ':
+      case '\t':
+      case '\n':
+        str_i++;
+        break;
+      default:
+        c = '\0';
+        break;
+    }
+  }
+  return str_i;
 }
 
 #define tokinit int o = 0; int l = 0; char token[256];
