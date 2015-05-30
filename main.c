@@ -167,6 +167,34 @@ int evaluateExpression(QueryExpression *qexp, int row, int col, int width, int h
   }
 }
 
+void evaluateOperation(QueryOperation *op, int row, int col, int width, int height, Pix *target, Pix *in, Pix *out)
+{
+  int val = evaluateExpression(&op->rvalue, row, col, width, height, target, in, out);
+
+  switch(op->lvalue.type)
+  {
+    case QUERY_VALUE_TYPE_R:
+      out[(col*width)+row].r = val;
+      break;
+    case QUERY_VALUE_TYPE_G:
+      out[(col*width)+row].g = val;
+      break;
+    case QUERY_VALUE_TYPE_B:
+      out[(col*width)+row].b = val;
+      break;
+    case QUERY_VALUE_TYPE_A:
+      out[(col*width)+row].a = val;
+      break;
+    case QUERY_VALUE_TYPE_INVALID:
+    case QUERY_VALUE_TYPE_ROW:
+    case QUERY_VALUE_TYPE_COL:
+    case QUERY_VALUE_TYPE_WIDTH:
+    case QUERY_VALUE_TYPE_HEIGHT:
+    case QUERY_VALUE_TYPE_CONSTANT:
+      break;
+  }
+}
+
 int main(int argc, char **argv)
 {
   initTokens();
@@ -300,21 +328,28 @@ int main(int argc, char **argv)
         for(int l = 0; l < ih->width; l++)
         {
           if(evaluateExpression(&s->exp, l, k, ih->width, ih->height, sel_reference, IN_DATA, OUT_DATA))
-          {
             SELECTION_MASK[j] = 1;
-          }
         }
       }
     }
     for(int j = 0; j < p->noperations; j++)
     {
       o = &p->operations[j];
+
+      for(int k = 0; k < ih->height; k++)
+      {
+        for(int l = 0; l < ih->width; l++)
+        {
+          evaluateOperation(o, l, k, ih->width, ih->height, sel_reference, IN_DATA, OUT_DATA);
+        }
+      }
     }
   }
 
-
+/*
   for(int i = 0; i < ih->height; i++)
     OUT_DATA[(i*ih->width)+(int)(((float)i/(float)ih->height)*ih->width)].r = 0xFF;
+*/
 
   //OUTPUT
   FILE *out;

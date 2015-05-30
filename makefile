@@ -23,6 +23,8 @@ $(OUTFILE).dSYM: $(HEADERS) $(SOURCES)
 debug: $(OUTFILE).dSYM
 	$(DEBUGGER) $(OUTFILE)
 
+debugargs: $(OUTFILE).dSYM
+	$(DEBUGGER) --args $(OUTFILE) -i ~/Desktop/input.bmp -o ~/Desktop/output.bmp -q "COPY; SELECT WHERE COL < 100; OPERATE A = 0;"
 
 TEST_OUTFILE=pixql_test
 TEST_HEADERS:=$(ALL_HEADERS)

@@ -26,7 +26,7 @@ int cmp(char *a, char *b)
   int d;
   while(a[i] != '\0' && b[i] != '\0')
   {
-    d = a-b;
+    d = a[i]-b[i];
     if(d != 0) return d;
     i++;
   }

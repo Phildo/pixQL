@@ -29,8 +29,10 @@ PIXEL
 
 CONSTANT = WIDTH, HEIGHT, {number}
 
-pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
+//pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
+pixql -i ~/Desktop/input.bmp -o ~/Desktop/output.bmp -q "COPY; SELECT WHERE COL < 100; OPERATE A = 0;"
 
+v
 TARGET = IN, OUT
 
 [ [ COPY | BLANK | NEW(w,h) ] ; | ] SELECT {TARGET} [ FROM {TARGET} | ] WHERE [{TARGET}. | ]{PROPERTY} [ < | > | = ] [ [{TARGET}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
