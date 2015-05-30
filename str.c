@@ -16,7 +16,7 @@ int strLen(char *s)
 }
 char toLower(char c)
 {
-  if(c > 'A' && c < 'Z')
+  if(c >= 'A' && c <= 'Z')
     return c - ('A'-'a');
   return c;
 }
