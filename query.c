@@ -51,17 +51,17 @@ int parseValue(char *q, int s, int e, QueryValue *v, QueryError *err)
   }
 
   tok;
-       if(teq("row"))    v->value_type = QUERY_VALUE_TYPE_ROW;
-  else if(teq("col"))    v->value_type = QUERY_VALUE_TYPE_COL;
-  else if(teq("r"))      v->value_type = QUERY_VALUE_TYPE_R;
-  else if(teq("g"))      v->value_type = QUERY_VALUE_TYPE_G;
-  else if(teq("b"))      v->value_type = QUERY_VALUE_TYPE_B;
-  else if(teq("a"))      v->value_type = QUERY_VALUE_TYPE_A;
-  else if(teq("width"))  v->value_type = QUERY_VALUE_TYPE_WIDTH;
-  else if(teq("height")) v->value_type = QUERY_VALUE_TYPE_HEIGHT;
+       if(teq("row"))    v->type = QUERY_VALUE_TYPE_ROW;
+  else if(teq("col"))    v->type = QUERY_VALUE_TYPE_COL;
+  else if(teq("r"))      v->type = QUERY_VALUE_TYPE_R;
+  else if(teq("g"))      v->type = QUERY_VALUE_TYPE_G;
+  else if(teq("b"))      v->type = QUERY_VALUE_TYPE_B;
+  else if(teq("a"))      v->type = QUERY_VALUE_TYPE_A;
+  else if(teq("width"))  v->type = QUERY_VALUE_TYPE_WIDTH;
+  else if(teq("height")) v->type = QUERY_VALUE_TYPE_HEIGHT;
   else
   {
-    v->value_type = QUERY_VALUE_TYPE_CONSTANT;
+    v->type = QUERY_VALUE_TYPE_CONSTANT;
     int a;
     if(intFromDec(token,&a))
       v->value = a;
@@ -130,19 +130,19 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
         }
         else
         {
-               if(teq("or")) qexp->type  = QUERY_OPERATION_TYPE_OR;
-          else if(teq("and")) qexp->type = QUERY_OPERATION_TYPE_AND;
-          else if(teq("=")) qexp->type   = QUERY_OPERATION_TYPE_EQ;
-          else if(teq("!=")) qexp->type  = QUERY_OPERATION_TYPE_NE;
-          else if(teq("<")) qexp->type   = QUERY_OPERATION_TYPE_LT;
-          else if(teq("<=")) qexp->type  = QUERY_OPERATION_TYPE_LTE;
-          else if(teq(">=")) qexp->type  = QUERY_OPERATION_TYPE_GTE;
-          else if(teq(">")) qexp->type   = QUERY_OPERATION_TYPE_GT;
-          else if(teq("-")) qexp->type   = QUERY_OPERATION_TYPE_SUB;
-          else if(teq("+")) qexp->type   = QUERY_OPERATION_TYPE_ADD;
-          else if(teq("/")) qexp->type   = QUERY_OPERATION_TYPE_DIV;
-          else if(teq("*")) qexp->type   = QUERY_OPERATION_TYPE_MUL;
-          else if(teq("%")) qexp->type   = QUERY_OPERATION_TYPE_MOD;
+               if(teq("or")) qexp->type  = QUERY_EXPRESSION_TYPE_OR;
+          else if(teq("and")) qexp->type = QUERY_EXPRESSION_TYPE_AND;
+          else if(teq("=")) qexp->type   = QUERY_EXPRESSION_TYPE_EQ;
+          else if(teq("!=")) qexp->type  = QUERY_EXPRESSION_TYPE_NE;
+          else if(teq("<")) qexp->type   = QUERY_EXPRESSION_TYPE_LT;
+          else if(teq("<=")) qexp->type  = QUERY_EXPRESSION_TYPE_LTE;
+          else if(teq(">=")) qexp->type  = QUERY_EXPRESSION_TYPE_GTE;
+          else if(teq(">")) qexp->type   = QUERY_EXPRESSION_TYPE_GT;
+          else if(teq("-")) qexp->type   = QUERY_EXPRESSION_TYPE_SUB;
+          else if(teq("+")) qexp->type   = QUERY_EXPRESSION_TYPE_ADD;
+          else if(teq("/")) qexp->type   = QUERY_EXPRESSION_TYPE_DIV;
+          else if(teq("*")) qexp->type   = QUERY_EXPRESSION_TYPE_MUL;
+          else if(teq("%")) qexp->type   = QUERY_EXPRESSION_TYPE_MOD;
 
           commit;
           qexp->b = malloc(sizeof(QueryExpression));
@@ -166,7 +166,7 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
       if(teq("not"))
       {
         commit;
-        qexp->type = QUERY_OPERATION_TYPE_NOT;
+        qexp->type = QUERY_EXPRESSION_TYPE_NOT;
         qexp->a = malloc(sizeof(QueryExpression));
         l = parseExpression(q, o, e, level+1, qexp->a, err);
         commit;
@@ -200,7 +200,7 @@ int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, Que
     }
     case 9: // value
     {
-      qexp->type = QUERY_OPERATION_TYPE_VALUE;
+      qexp->type = QUERY_EXPRESSION_TYPE_VALUE;
       l = parseValue(q,o,e,&qexp->v,err);
       commit;
     }

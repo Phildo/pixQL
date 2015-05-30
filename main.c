@@ -65,6 +65,108 @@ void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
   }
 }
 
+int evaluateValue(QueryValue *v, int row, int col, int width, int height, Pix *target, Pix *in, Pix *out)
+{
+  Pix *t;
+  switch(v->target)
+  {
+    case QUERY_TARGET_IN:  t = in; break;
+    case QUERY_TARGET_OUT: t = in; break;
+    case QUERY_TARGET_INVALID:
+    default:
+      t = target;
+      break;
+  }
+  switch(v->type)
+  {
+    case QUERY_VALUE_TYPE_INVALID:
+      return 0;
+      break;
+    case QUERY_VALUE_TYPE_ROW:
+      return row;
+      break;
+    case QUERY_VALUE_TYPE_COL:
+      return col;
+      break;
+    case QUERY_VALUE_TYPE_R:
+      return t[(col*width)+row].r;
+      break;
+    case QUERY_VALUE_TYPE_G:
+      return t[(col*width)+row].g;
+      break;
+    case QUERY_VALUE_TYPE_B:
+      return t[(col*width)+row].b;
+      break;
+    case QUERY_VALUE_TYPE_A:
+      return t[(col*width)+row].a;
+      break;
+    case QUERY_VALUE_TYPE_WIDTH:
+      return width;
+      break;
+    case QUERY_VALUE_TYPE_HEIGHT:
+      return height;
+      break;
+    case QUERY_VALUE_TYPE_CONSTANT:
+      return v->value;
+      break;
+  }
+}
+
+int evaluateExpression(QueryExpression *qexp, int row, int col, int width, int height, Pix *target, Pix *in, Pix *out)
+{
+  switch(qexp->type)
+  {
+    case QUERY_EXPRESSION_TYPE_INVALID:
+      return 0;
+      break;
+    case QUERY_EXPRESSION_TYPE_OR:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) || evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_AND:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) && evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_NOT:
+      return !evaluateExpression(qexp->a, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_EQ:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) == evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_NE:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) != evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_LT:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) < evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_LTE:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) <= evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_GTE:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) >= evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_GT:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) > evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_SUB:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) - evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_ADD:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) + evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_DIV:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) / evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_MUL:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) * evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_MOD:
+      return evaluateExpression(qexp->a, row, col, width, height, target, in, out) % evaluateExpression(qexp->b, row, col, width, height, target, in, out);
+      break;
+    case QUERY_EXPRESSION_TYPE_VALUE:
+      return evaluateValue(&qexp->v, row, col, width, height, target, in, out);
+      break;
+  }
+}
+
 int main(int argc, char **argv)
 {
   initTokens();
@@ -93,6 +195,7 @@ int main(int argc, char **argv)
 
   Pix *IN_DATA;
   Pix *OUT_DATA;
+  byte *SELECTION_MASK;
 
   int l = parseQuery(query_str, &query, &err);
   if(l == -1) ERROR(1,"There was an error");
@@ -141,14 +244,75 @@ int main(int argc, char **argv)
 
   IN_DATA  = malloc(ih->width*ih->height*sizeof(Pix));
   OUT_DATA = malloc(ih->width*ih->height*sizeof(Pix));
+  SELECTION_MASK = malloc(ih->width*ih->height*sizeof(byte));
+
   dataToPix(b.pixel_array, ih->bpp, roww, ih->width, ih->height, IN_DATA);
 
-  //COPY
-  for(int i = 0; i < ih->height; i++)
-    for(int j = 0; j < ih->width; j++)
-      OUT_DATA[(i*ih->width)+j] = IN_DATA[(i*ih->width)+j];
-
   //MODIFY
+  switch(query.mode)
+  {
+    case QUERY_INIT_MODE_COPY:
+    default:
+    {
+      for(int i = 0; i < ih->height; i++)
+        for(int j = 0; j < ih->width; j++)
+          OUT_DATA[(i*ih->width)+j] = IN_DATA[(i*ih->width)+j];
+    }
+      break;
+  }
+
+  QueryProcedure *p;
+  QuerySelection *s;
+  QueryOperation *o;
+  Pix *op_selection;
+  Pix *sel_reference;
+  for(int i = 0; i < query.nprocedures; i++)
+  {
+    p = &query.procedures[i];
+
+
+    for(int j = 0; j < ih->width*ih->height; j++)
+      SELECTION_MASK[j] = 0;
+    for(int j = 0; j < p->nselects; j++)
+    {
+      s = &p->selects[j];
+      switch(s->selecting)
+      {
+        case QUERY_TARGET_IN:  op_selection = IN_DATA;  break;
+        case QUERY_TARGET_OUT: op_selection = OUT_DATA; break;
+        case QUERY_TARGET_INVALID:
+        default:
+          op_selection = IN_DATA;
+          break;
+      }
+      switch(s->reference)
+      {
+        case QUERY_TARGET_IN:  sel_reference = IN_DATA;  break;
+        case QUERY_TARGET_OUT: sel_reference = OUT_DATA; break;
+        case QUERY_TARGET_INVALID:
+        default:
+          sel_reference = IN_DATA;
+          break;
+      }
+
+      for(int k = 0; k < ih->height; k++)
+      {
+        for(int l = 0; l < ih->width; l++)
+        {
+          if(evaluateExpression(&s->exp, l, k, ih->width, ih->height, sel_reference, IN_DATA, OUT_DATA))
+          {
+            SELECTION_MASK[j] = 1;
+          }
+        }
+      }
+    }
+    for(int j = 0; j < p->noperations; j++)
+    {
+      o = &p->operations[j];
+    }
+  }
+
+
   for(int i = 0; i < ih->height; i++)
     OUT_DATA[(i*ih->width)+(int)(((float)i/(float)ih->height)*ih->width)].r = 0xFF;
 
