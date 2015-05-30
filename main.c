@@ -6,6 +6,7 @@
 #include "str.h"
 
 #include "bitmap.h"
+#include "token.h"
 #include "query.h"
 
 #define ERROR(n,err, ...) ({ fprintf(stderr,err, ##__VA_ARGS__); printf("\n"); exit(n); })
