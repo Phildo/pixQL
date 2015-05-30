@@ -57,6 +57,12 @@ typedef struct
   int at;
   char *message;
 } QueryError;
+typedef struct
+{
+  QUERY_VALUE_TYPE value_type;
+  QUERY_TARGET target;
+  int value;
+} QueryValue;
 typedef struct QueryExpression
 {
   QUERY_OPERATION_TYPE type;
@@ -67,18 +73,13 @@ typedef struct QueryExpression
       struct QueryExpression *a;
       struct QueryExpression *b;
     };
-    struct
-    {
-      QUERY_VALUE_TYPE value_type;
-      int value;
-    };
+    QueryValue v;
   };
 } QueryExpression;
 typedef struct
 {
-  QUERY_TARGET selecting;
-  QUERY_TARGET reference;
-  QueryExpression exp;
+  QueryValue lvalue;
+  QueryExpression rvalue;
 } QueryOperation;
 typedef struct
 {
