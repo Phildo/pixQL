@@ -1,13 +1,28 @@
-// Grid
-UPDATE output.pixels SET pixel.color.r = FF WHERE pixel.row % 100 == 0 OR pixel.column % 100 == 0; //too verbose
-SET color.r = FF WHERE row % 100 == 0 OR column % 100 == 0;
+todo
 
-// Resize
-SET color = pixels.row((row/height)*newHeight).column((column/width)*newWidth).color;
-
-Ordering of SQL is terrible. Use opportunity to deviate/simplify.
-
-SELECT->OPERATE;{xn};OUTPUT;
+general cleanup
+error checking
+'BLANK' as init option (or 'BLACK', 'WHITE', 'CLEAR', 'RANDOM', etc...)
+NEW actually works
+fix syntax
+  -each procdure
+    -single select
+    -multiple operates (separated by ;?)
+  - SELECT X FROM Y change to...
+    - SELECT FROM X
+    - OPERATE ON Y
+allow pixel access
+  -r = IN[0,12].r
+  -r = IN[0,r-1].r
+  -etc...
+set colors as hex
+  r = #FF
+  r = 0xFF
+  color = #FFFFFF //rgb
+  color = #FFFFFFFF //rgba
+bitmap format support
+png/jpg/etc... support
+tmp targets
 
 keywords
 --------
@@ -32,7 +47,6 @@ CONSTANT = WIDTH, HEIGHT, {number}
 //pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
 pixql -i ~/Desktop/input.bmp -o ~/Desktop/output.bmp -q "COPY; SELECT WHERE COL < 100; OPERATE A = 0;"
 
-v
 TARGET = IN, OUT
 
 [ [ COPY | BLANK | NEW(w,h) ] ; | ] SELECT {TARGET} [ FROM {TARGET} | ] WHERE [{TARGET}. | ]{PROPERTY} [ < | > | = ] [ [{TARGET}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
