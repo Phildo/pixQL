@@ -32,10 +32,10 @@ void dataToPix(byte *data, int bpp, int roww, int w, int h, Pix *pix)
       {
         for(int j = 0; j < w; j++)
         {
-          pix[(i*w)+j].r = data[(i*roww)+j+0];
-          pix[(i*w)+j].g = data[(i*roww)+j+1];
-          pix[(i*w)+j].b = data[(i*roww)+j+2];
-          pix[(i*w)+j].a = data[(i*roww)+j+3];
+          pix[(i*w)+j].a = data[(i*roww)+(j*4)+0];
+          pix[(i*w)+j].b = data[(i*roww)+(j*4)+1];
+          pix[(i*w)+j].g = data[(i*roww)+(j*4)+2];
+          pix[(i*w)+j].r = data[(i*roww)+(j*4)+3];
         }
       }
     break;
@@ -53,10 +53,10 @@ void pixToData(Pix *pix, int bpp, int roww, int w, int h, byte *data)
       {
         for(int j = 0; j < w; j++)
         {
-          data[(i*roww)+j+0] = pix[(i*w)+j].r;
-          data[(i*roww)+j+1] = pix[(i*w)+j].g;
-          data[(i*roww)+j+2] = pix[(i*w)+j].b;
-          data[(i*roww)+j+3] = pix[(i*w)+j].a;
+          data[(i*roww)+(j*4)+0] = pix[(i*w)+j].a;
+          data[(i*roww)+(j*4)+1] = pix[(i*w)+j].b;
+          data[(i*roww)+(j*4)+2] = pix[(i*w)+j].g;
+          data[(i*roww)+(j*4)+3] = pix[(i*w)+j].r;
         }
       }
     break;
@@ -345,11 +345,6 @@ int main(int argc, char **argv)
       }
     }
   }
-
-/*
-  for(int i = 0; i < ih->height; i++)
-    OUT_DATA[(i*ih->width)+(int)(((float)i/(float)ih->height)*ih->width)].r = 0xFF;
-*/
 
   //OUTPUT
   FILE *out;
