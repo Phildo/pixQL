@@ -13,13 +13,14 @@ typedef struct BitmapFileHeader
   uint32 offset;
 } BitmapFileHeader;
 
-extern const uint BITMAPCOREHEADER_SIZE;
-extern const uint OS22XBITMAPHEADER_SIZE;
-extern const uint BITMAPINFOHEADER_SIZE;
-extern const uint BITMAPV2INFOHEADER_SIZE;
-extern const uint BITMAPV3INFOHEADER_SIZE;
-extern const uint BITMAPV4HEADER_SIZE;
-extern const uint BITMAPV5HEADER_SIZE;
+//this is bonkers
+enum { BITMAPCOREHEADER_SIZE   = 12 };
+enum { OS22XBITMAPHEADER_SIZE  = 64 };
+enum { BITMAPINFOHEADER_SIZE   = 40 };
+enum { BITMAPV2INFOHEADER_SIZE = 52 };
+enum { BITMAPV3INFOHEADER_SIZE = 56 };
+enum { BITMAPV4HEADER_SIZE     = 108 };
+enum { BITMAPV5HEADER_SIZE     = 124 };
 
 typedef struct BITMAPCOREHEADER
 {
@@ -97,7 +98,7 @@ typedef union DIBHeader
   BITMAPV5HEADER bitmap_v5_header;
 } DIBHeader;
 
-extern const int EXTRA_BIT_MASKS_SIZE;
+enum { EXTRA_BIT_MASKS_SIZE = 14 };
 typedef struct Bitmap
 {
   BitmapFileHeader bitmap_file_header;
