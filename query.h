@@ -1,6 +1,7 @@
 #ifndef _QUERY_H_
 #define _QUERY_H_
 
+#include "pix.h" //just for pixerr... hmm...
 #include "query_def.h"
 
 void *expand(void *src, int cur_n, int size);
@@ -10,7 +11,7 @@ int parseOperation(char *q, int s, int e, QueryOperation *op, QueryError *err);
 int parseExpression(char *q, int s, int e, int level, QueryExpression *qexp, QueryError *err);
 int parseSelection(char *q, int s, int e, QuerySelection *sel, QueryError *err);
 int parseMode(char *q, int s, int e, Query *query, QueryError *err);
-int parseQuery(char *q, Query *query, QueryError *err);
+int parseQuery(char *q, Query *query, PixErr *err);
 
 #endif
 

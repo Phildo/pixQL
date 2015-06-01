@@ -13,13 +13,13 @@ typedef struct BitmapFileHeader
   uint32 offset;
 } BitmapFileHeader;
 
-const uint BITMAPCOREHEADER_SIZE   = 12;
-const uint OS22XBITMAPHEADER_SIZE  = 64;
-const uint BITMAPINFOHEADER_SIZE   = 40;
-const uint BITMAPV2INFOHEADER_SIZE = 52;
-const uint BITMAPV3INFOHEADER_SIZE = 56;
-const uint BITMAPV4HEADER_SIZE     = 108;
-const uint BITMAPV5HEADER_SIZE     = 124;
+extern const uint BITMAPCOREHEADER_SIZE;
+extern const uint OS22XBITMAPHEADER_SIZE;
+extern const uint BITMAPINFOHEADER_SIZE;
+extern const uint BITMAPV2INFOHEADER_SIZE;
+extern const uint BITMAPV3INFOHEADER_SIZE;
+extern const uint BITMAPV4HEADER_SIZE;
+extern const uint BITMAPV5HEADER_SIZE;
 
 typedef struct BITMAPCOREHEADER
 {
@@ -97,7 +97,7 @@ typedef union DIBHeader
   BITMAPV5HEADER bitmap_v5_header;
 } DIBHeader;
 
-const int EXTRA_BIT_MASKS_SIZE = 14;
+extern const int EXTRA_BIT_MASKS_SIZE;
 typedef struct Bitmap
 {
   BitmapFileHeader bitmap_file_header;
@@ -108,6 +108,11 @@ typedef struct Bitmap
   byte *pixel_array;
   byte *gap2;
   byte *icc_color_profile;
+  struct
+  {
+    uint32 row_w;
+    uint32 pixel_n_bytes;
+  } extra_info;
 } Bitmap;
 
 #endif

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "str.h"
 
+int tokens_init = 0;
+
 const char *query_init_tokens[] =
 {
   "new",
@@ -63,8 +65,11 @@ const char *query_property_tokens[] =
   ""
 };
 
+
 void initTokens()
 {
+  if(tokens_init) return;
+
   //for brevety
   const int *ls = query_operation_token_oo_lvls;
   char ***lls = &query_operation_tokens_of_oo_lvl[0];
@@ -83,6 +88,8 @@ void initTokens()
 
     si = ci;
   }
+
+  tokens_init = 1;
 }
 
 int isTokenType(char *t, char **type)

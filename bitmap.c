@@ -1,0 +1,12 @@
+#include "bitmap.h"
+
+const uint BITMAPCOREHEADER_SIZE   = 12;
+const uint OS22XBITMAPHEADER_SIZE  = 64;
+const uint BITMAPINFOHEADER_SIZE   = 40;
+const uint BITMAPV2INFOHEADER_SIZE = 52;
+const uint BITMAPV3INFOHEADER_SIZE = 56;
+const uint BITMAPV4HEADER_SIZE     = 108;
+const uint BITMAPV5HEADER_SIZE     = 124;
+
+const int EXTRA_BIT_MASKS_SIZE = 14;
+

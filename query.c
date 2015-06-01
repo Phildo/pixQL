@@ -306,13 +306,16 @@ int parseMode(char *q, int s, int e, Query *query, QueryError *err)
   return -1;
 }
 
-int parseQuery(char *q, Query *query, QueryError *err)
+int parseQuery(char *q, Query *query, PixErr *err)
 {
+  QueryError qerr;
+  initTokens();
+
   int s = 0; //for sake of tokinit
   tokinit;
   int qlen = strLen(q);
 
-  l = parseMode(q, o, qlen, query, err);
+  l = parseMode(q, o, qlen, query, &qerr);
   commit;
 
   //PROCEDURES
@@ -331,7 +334,7 @@ int parseQuery(char *q, Query *query, QueryError *err)
       pro->nselects++;
       QuerySelection *sel = &pro->selects[pro->nselects-1];
 
-      l = parseSelection(q, o, qlen, sel, err);
+      l = parseSelection(q, o, qlen, sel, &qerr);
       if(l == -1)
       {
         pro->nselects--;
@@ -348,7 +351,7 @@ int parseQuery(char *q, Query *query, QueryError *err)
       pro->noperations++;
       QueryOperation *op = &pro->operations[pro->noperations-1];
 
-      l = parseOperation(q, o, qlen, op, err);
+      l = parseOperation(q, o, qlen, op, &qerr);
       if(l == -1)
       {
         pro->noperations--;
