@@ -100,7 +100,7 @@ void readBitmap(const char *infile, Bitmap *b, PixErr *err)
   fclose(in);
 }
 
-void readFile(const char *infile, PixImg *img, PixErr *err)
+ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
 {
   Bitmap b;
   readBitmap(infile, &b, err);
@@ -111,6 +111,8 @@ void readFile(const char *infile, PixImg *img, PixErr *err)
   img->data = malloc(img->width*img->height*sizeof(Pix));
 
   dataToPix(b.pixel_array, b.dib_header.bitmap_info_header.bpp, b.extra_info.row_w, img, err);
+
+  return NO_ERR;
 }
 
 void writeBitmap(const char *outfile, PixImg *img, PixErr *err)
@@ -136,8 +138,10 @@ void writeBitmap(const char *outfile, PixImg *img, PixErr *err)
   fclose(out);
 }
 
-void writeFile(const char *outfile, PixImg *img, PixErr *err)
+ERR_EXISTS writeFile(const char *outfile, PixImg *img, PixErr *err)
 {
   writeBitmap(outfile, img, err);
+
+  return NO_ERR;
 }
 

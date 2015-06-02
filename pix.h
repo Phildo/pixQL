@@ -5,12 +5,6 @@
 
 typedef struct
 {
-  int e;
-  char *s;
-} PixErr;
-
-typedef struct
-{
   byte r;
   byte g;
   byte b;

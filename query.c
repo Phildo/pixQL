@@ -306,12 +306,11 @@ int parseMode(char *q, int s, int e, Query *query, QueryError *err)
   return -1;
 }
 
-int parseQuery(char *q, Query *query, PixErr *err)
+ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
 {
   QueryError qerr;
   initTokens();
 
-  int s = 0; //for sake of tokinit
   tokinit;
   int qlen = strLen(q);
 
@@ -364,6 +363,6 @@ int parseQuery(char *q, Query *query, PixErr *err)
   }
 
   tok;
-  return o-s;
+  return NO_ERR;
 }
 

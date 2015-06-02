@@ -132,7 +132,7 @@ void evaluateOperation(QueryOperation *op, int row, int col, PixImg *target, Pix
   }
 }
 
-void executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *err)
+ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *err)
 {
   byte *selection_mask;
 
@@ -209,5 +209,7 @@ void executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *err)
       }
     }
   }
+
+  return NO_ERR;
 }
 
