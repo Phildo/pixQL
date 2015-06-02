@@ -308,13 +308,16 @@ int parseMode(char *q, int s, int e, Query *query, QueryError *err)
 
 ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
 {
-  QueryError qerr;
   initTokens();
+  QueryError qerr;
 
-  tokinit;
   int qlen = strLen(q);
 
+  int o = 0;
+  int l = 0;
+
   l = parseMode(q, o, qlen, query, &qerr);
+  if(l == -1) ERROR(err,"Error parsing mode");
   commit;
 
   //PROCEDURES
@@ -325,44 +328,40 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
     query->nprocedures++;
     QueryProcedure *pro = &query->procedures[query->nprocedures-1];
 
-    //SELECTS
-    int reading_selects = 1;
-    while(reading_selects)
+    //SELECT
+    QuerySelection *sel = &pro->select;
+    l = parseSelection(q, o, qlen, sel, &qerr);
+    if(l != -1)
     {
-      pro->selects = expand(pro->selects, pro->nselects, sizeof(QuerySelection));
-      pro->nselects++;
-      QuerySelection *sel = &pro->selects[pro->nselects-1];
+      commit;
 
-      l = parseSelection(q, o, qlen, sel, &qerr);
-      if(l == -1)
+      //OPERATIONS
+      int reading_operations = 1;
+      while(reading_operations)
       {
-        pro->nselects--;
-        reading_selects = 0;
-      }
-      else commit;
-    }
+        pro->operations = expand(pro->operations, pro->noperations, sizeof(QueryOperation));
+        pro->noperations++;
+        QueryOperation *op = &pro->operations[pro->noperations-1];
 
-    //OPERATIONS
-    int reading_operations = 1;
-    while(reading_operations)
+        l = parseOperation(q, o, qlen, op, &qerr);
+        if(l != -1)
+          commit;
+        else
+        {
+          pro->noperations--;
+          reading_operations = 0;
+          if(pro->noperations == 0) ERROR(err,"Error parsing operations");
+        }
+      }
+    }
+    else
     {
-      pro->operations = expand(pro->operations, pro->noperations, sizeof(QueryOperation));
-      pro->noperations++;
-      QueryOperation *op = &pro->operations[pro->noperations-1];
-
-      l = parseOperation(q, o, qlen, op, &qerr);
-      if(l == -1)
-      {
-        pro->noperations--;
-        reading_operations = 0;
-      }
-      else commit;
+      query->nprocedures--;
+      reading_procedures = 0;
+      if(query->nprocedures == 0) ERROR(err,"Error parsing selection");
     }
-
-    reading_procedures = pro->nselects + pro->noperations;
   }
 
-  tok;
   return NO_ERR;
 }
 

@@ -3,6 +3,31 @@
 #include "str.h"
 
 int tokens_init = 0;
+void initTokens()
+{
+  if(tokens_init) return;
+
+  //for brevety
+  const int *ls = query_operation_token_oo_lvls;
+  char ***lls = &query_operation_tokens_of_oo_lvl[0];
+
+  int c  = 0;
+  int si = 0;
+  int ci = 0;
+  for(c = 0; c < QUERY_NUM_OO_LEVELS; c++)
+  {
+    while(ls[ci] == c) ci++;
+
+    lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
+    for(int j = 0; j < ci-si; j++)
+      lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
+    lls[ls[si]][ci-si] = 0;
+
+    si = ci;
+  }
+
+  tokens_init = 1;
+}
 
 const char *query_init_tokens[] =
 {
@@ -64,33 +89,6 @@ const char *query_property_tokens[] =
   "a",
   ""
 };
-
-
-void initTokens()
-{
-  if(tokens_init) return;
-
-  //for brevety
-  const int *ls = query_operation_token_oo_lvls;
-  char ***lls = &query_operation_tokens_of_oo_lvl[0];
-
-  int c  = 0;
-  int si = 0;
-  int ci = 0;
-  for(c = 0; c < QUERY_NUM_OO_LEVELS; c++)
-  {
-    while(ls[ci] == c) ci++;
-
-    lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
-    for(int j = 0; j < ci-si; j++)
-      lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
-    lls[ls[si]][ci-si] = 0;
-
-    si = ci;
-  }
-
-  tokens_init = 1;
-}
 
 int isTokenType(char *t, char **type)
 {

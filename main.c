@@ -1,4 +1,3 @@
-#include <stdlib.h>  //exit
 #include <stdio.h>  //printf, fread, fwrite
 
 #include "dotypes.h"

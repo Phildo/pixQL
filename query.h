@@ -4,6 +4,15 @@
 #include "err.h"
 #include "query_def.h"
 
+#define QERROR(err, ...) ({ sprintf(err->info, ##__VA_ARGS__); return -1; })
+
+typedef struct
+{
+  QUERY_ERROR_TYPE type;
+  char info[256];
+  int position;
+} QueryError;
+
 void *expand(void *src, int cur_n, int size);
 int parseTarget(char *q, int s, int e, QUERY_TARGET *t, QueryError *err);
 int parseValue(char *q, int s, int e, QueryValue *v, QueryError *err);

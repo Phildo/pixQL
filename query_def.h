@@ -53,12 +53,6 @@ typedef enum
 
 typedef struct
 {
-  QUERY_ERROR_TYPE type;
-  int at;
-  char *message;
-} QueryError;
-typedef struct
-{
   QUERY_VALUE_TYPE type;
   QUERY_TARGET target;
   int value;
@@ -89,8 +83,7 @@ typedef struct
 } QuerySelection;
 typedef struct
 {
-  QuerySelection *selects;
-  int nselects;
+  QuerySelection select;
   QueryOperation *operations;
   int noperations;
 } QueryProcedure;

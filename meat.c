@@ -165,37 +165,36 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
 
     for(int j = 0; j < in_img->width*in_img->height; j++)
       selection_mask[j] = 0;
-    for(int j = 0; j < p->nselects; j++)
-    {
-      s = &p->selects[j];
-      switch(s->selecting)
-      {
-        case QUERY_TARGET_IN:  op_selection = in_img;  break;
-        case QUERY_TARGET_OUT: op_selection = out_img; break;
-        case QUERY_TARGET_INVALID:
-        default:
-          op_selection = in_img;
-          break;
-      }
-      switch(s->reference)
-      {
-        case QUERY_TARGET_IN:  sel_reference = in_img;  break;
-        case QUERY_TARGET_OUT: sel_reference = out_img; break;
-        case QUERY_TARGET_INVALID:
-        default:
-          sel_reference = in_img;
-          break;
-      }
 
-      for(int k = 0; k < in_img->height; k++)
+    s = &p->select;
+    switch(s->selecting)
+    {
+      case QUERY_TARGET_IN:  op_selection = in_img;  break;
+      case QUERY_TARGET_OUT: op_selection = out_img; break;
+      case QUERY_TARGET_INVALID:
+      default:
+        op_selection = in_img;
+        break;
+    }
+    switch(s->reference)
+    {
+      case QUERY_TARGET_IN:  sel_reference = in_img;  break;
+      case QUERY_TARGET_OUT: sel_reference = out_img; break;
+      case QUERY_TARGET_INVALID:
+      default:
+        sel_reference = in_img;
+        break;
+    }
+
+    for(int k = 0; k < in_img->height; k++)
+    {
+      for(int l = 0; l < in_img->width; l++)
       {
-        for(int l = 0; l < in_img->width; l++)
-        {
-          if(evaluateExpression(&s->exp, l, k, sel_reference, in_img, out_img, err))
-            selection_mask[j] = 1;
-        }
+        if(evaluateExpression(&s->exp, l, k, sel_reference, in_img, out_img, err))
+          selection_mask[(k*in_img->width)+l] = 1;
       }
     }
+
     for(int j = 0; j < p->noperations; j++)
     {
       o = &p->operations[j];
