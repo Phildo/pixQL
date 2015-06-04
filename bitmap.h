@@ -4,7 +4,7 @@
 #include "dotypes.h"
 
 /* spec from http://en.wikipedia.org/wiki/BMP_file_format */
-typedef struct BitmapFileHeader
+typedef struct
 {
   byte header_field[2];
   uint32 size;
@@ -22,7 +22,7 @@ enum { BITMAPV3INFOHEADER_SIZE = 56 };
 enum { BITMAPV4HEADER_SIZE     = 108 };
 enum { BITMAPV5HEADER_SIZE     = 124 };
 
-typedef struct BITMAPCOREHEADER
+typedef struct
 {
   uint32 header_size;
   uint16 width;
@@ -31,7 +31,7 @@ typedef struct BITMAPCOREHEADER
   uint16 bpp;
 } BITMAPCOREHEADER;
 
-typedef struct BITMAPINFOHEADER
+typedef struct
 {
   uint32 header_size;
   int32 width;
@@ -46,7 +46,7 @@ typedef struct BITMAPINFOHEADER
   uint32 nimportantcolors;//0 if every color is important
 } BITMAPINFOHEADER;
 
-typedef struct BITMAPV5HEADER
+typedef struct
 {
   uint32 bV5Size;
   int32 bV5Width;
@@ -99,7 +99,7 @@ typedef union DIBHeader
 } DIBHeader;
 
 enum { EXTRA_BIT_MASKS_SIZE = 14 };
-typedef struct Bitmap
+typedef struct
 {
   BitmapFileHeader bitmap_file_header;
   DIBHeader dib_header;
