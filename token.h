@@ -16,6 +16,7 @@ int isTokenLevel(char *t, int l);
 int readToken(char *s, int offset, char *buff);
 
 #define tokinit int o = s; int l = 0; char token[256];
+#define basictokinit int o = s; int l = 0;
 #define teq(s) (cmpLower(token,s) == 0)
 #define tok (l = readToken(q,o,token))
 #define commit (o += l)

@@ -153,9 +153,9 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
     default: t = target; break;
   }
 
-  int val = evaluateExpression(&op->rvalue,col,row,target,in,out,err);
+  int val = evaluateExpression(&op->rval,col,row,target,in,out,err);
 
-  QueryMember *lval = op->lval;
+  QueryMember *lval = &op->lval;
   int prow;
   int pcol;
 
@@ -189,7 +189,7 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   selection_mask = malloc(out_img->width*out_img->height*sizeof(byte));
 
   //MODIFY
-  QueryInit *init = query->init;
+  QueryInit *init = &query->init;
   //actually implement init types
   switch(init->type)
   {
@@ -206,9 +206,9 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   QueryProcedure *p;
   QuerySelection *s;
   QueryOperation *o;
-  PixImg *op_selection;
-  PixImg *sel_reference;
-  for(int i = 0; i < query->nprocedures; i++)
+  PixImg *default_selecting;
+  PixImg *default_operating;
+  for(int i = 0; i < query->n_procedures; i++)
   {
     p = &query->procedures[i];
 
@@ -218,11 +218,11 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
     s = &p->selection;
     switch(s->selecting)
     {
-      case QUERY_TARGET_IN:  op_selection = in_img;  break;
-      case QUERY_TARGET_OUT: op_selection = out_img; break;
+      case QUERY_TARGET_IN:  default_selecting = in_img;  break;
+      case QUERY_TARGET_OUT: default_selecting = out_img; break;
       case QUERY_TARGET_INVALID:
       default:
-        op_selection = in_img;
+        default_selecting = in_img;
         break;
     }
 
@@ -230,20 +230,29 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
     {
       for(int l = 0; l < in_img->width; l++)
       {
-        if(evaluateExpression(&s->exp, l, k, sel_reference, in_img, out_img, err))
+        if(evaluateExpression(&s->exp, l, k, default_selecting, in_img, out_img, err))
           selection_mask[(k*in_img->width)+l] = 1;
       }
     }
 
-    for(int j = 0; j < p->noperations; j++)
+    for(int j = 0; j < p->n_operations; j++)
     {
       o = &p->operations[j];
+      switch(o->operating)
+      {
+        case QUERY_TARGET_IN:  default_operating = in_img;  break;
+        case QUERY_TARGET_OUT: default_operating = out_img; break;
+        case QUERY_TARGET_INVALID:
+        default:
+          default_operating = in_img;
+          break;
+      }
 
       for(int k = 0; k < in_img->height; k++)
       {
         for(int l = 0; l < in_img->width; l++)
         {
-          evaluateOperation(o, l, k, sel_reference, in_img, out_img, err);
+          evaluateOperation(o, l, k, default_operating, in_img, out_img, err);
         }
       }
     }

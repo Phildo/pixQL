@@ -237,7 +237,7 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
         //find placement of ,
 
         m->row = malloc(sizeof(QueryExpression));
-        l = parseIntoExpression(q,o,e,0,m->row,err)
+        l = parseIntoExpression(q,o,e,0,m->row,err);
         switch(err->type)
         {
           case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -250,7 +250,7 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
         commit;
 
         m->col = malloc(sizeof(QueryExpression));
-        l = parseIntoExpression(q,o,e,0,m->col,err)
+        l = parseIntoExpression(q,o,e,0,m->col,err);
         switch(err->type)
         {
           case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -294,7 +294,7 @@ static int parseIntoConstant(char *q, int s, int e, QueryConstant *c, QueryError
   else
   {
     if(!intFromDec(token,&c->value)) QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing constant");
-    c->type = QUERY_CONSTANT_TYPE_VALUE;
+    c->type = QUERY_CONSTANT_TYPE_NUMBER;
   }
   commit;
 
@@ -303,7 +303,7 @@ static int parseIntoConstant(char *q, int s, int e, QueryConstant *c, QueryError
 
 static int parseIntoValue(char *q, int s, int e, QueryValue *v, QueryError *err)
 {
-  tokinit;
+  basictokinit;
 
   l = parseIntoConstant(q,o,e,&v->constant,err);
   switch(err->type)
@@ -371,7 +371,7 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
 
 static int parseOperations(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
-  tokinit;
+  basictokinit;
 
   int reading_operations = 1;
   while(reading_operations)
@@ -422,7 +422,7 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
     commit;
 
     l = parseIntoExpression(q,o,e,0,&sel->exp,err);
-    switch
+    switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
       case QUERY_ERROR_TYPE_OPTIONAL: QERRORPASS; break;
@@ -439,9 +439,9 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
 
 static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
-  tokinit;
+  basictokinit;
 
-  QuerySelection *sel = &pro->select;
+  QuerySelection *sel = &pro->selection;
   l = parseIntoSelection(q,o,e,sel,err);
   switch(err->type)
   {
@@ -458,7 +458,7 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
 
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 {
-  tokinit;
+  basictokinit;
 
   int reading_procedures = 1;
   while(reading_procedures)
@@ -481,7 +481,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
       case QUERY_ERROR_TYPE_OPTIONAL:
         query->n_procedures--;
-        if(pro->n_procedures == 0) QERRORUP;
+        if(query->n_procedures == 0) QERRORUP;
         QERRORCLEAN;
         reading_procedures = 0;
       break;
@@ -511,7 +511,7 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
 
     //find placement of ,
 
-    l = parseIntoExpression(q,o,e,0,&init->width,err)
+    l = parseIntoExpression(q,o,e,0,&init->width,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -523,7 +523,7 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
     if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ','");
     commit;
 
-    l = parseIntoExpression(q,o,e,0,&init->height,err)
+    l = parseIntoExpression(q,o,e,0,&init->height,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -549,14 +549,14 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
 
 static int parseInit(char *q, int s, int e, Query *query, QueryError *err)
 {
-  tokinit;
+  basictokinit;
 
-  l = parseIntoInit(q,o,qlen,&query->init,err);
+  l = parseIntoInit(q,o,s,&query->init,err);
   switch(err->type)
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL:
-      query->init.type = QUERY_INIT_NEW;
+      query->init.type = QUERY_INIT_TYPE_COPY;
       //set width and height exprs
       QERRORCLEAN;
       break;
@@ -570,7 +570,7 @@ static int parseIntoQuery(char *q, Query *query, QueryError *err)
 {
   int s = 0;
   int e = strLen(q);
-  tokinit;
+  basictokinit;
 
   l = parseInit(q,o,e,query,err);
   switch(err->type)
