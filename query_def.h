@@ -3,33 +3,43 @@
 
 typedef enum
 {
-  QUERY_ERROR_TYPE_INVALID
-} QUERY_ERROR_TYPE;
-typedef enum
-{
-  QUERY_INIT_MODE_INVALID,
-  QUERY_INIT_MODE_NEW,
-  QUERY_INIT_MODE_COPY,
-  QUERY_INIT_MODE_BLANK
-} QUERY_INIT_MODE;
+  QUERY_INIT_TYPE_INVALID,
+  QUERY_INIT_TYPE_COPY,
+  QUERY_INIT_TYPE_CLEAR,
+  QUERY_INIT_TYPE_WHITE,
+  QUERY_INIT_TYPE_BLACK,
+} QUERY_INIT_TYPE;
 typedef enum
 {
   QUERY_TARGET_INVALID,
   QUERY_TARGET_IN,
-  QUERY_TARGET_OUT
+  QUERY_TARGET_OUT,
 } QUERY_TARGET;
 typedef enum
 {
+  QUERY_MEMBER_TYPE_INVALID,
+  QUERY_MEMBER_TYPE_COLOR,
+  QUERY_MEMBER_TYPE_R,
+  QUERY_MEMBER_TYPE_G,
+  QUERY_MEMBER_TYPE_B,
+  QUERY_MEMBER_TYPE_A,
+  QUERY_MEMBER_TYPE_ROW,
+  QUERY_MEMBER_TYPE_COL,
+} QUERY_MEMBER_TYPE;
+typedef enum
+{
+  QUERY_CONSTANT_TYPE_INVALID,
+  QUERY_CONSTANT_TYPE_WIDTH,
+  QUERY_CONSTANT_TYPE_HEIGHT,
+  QUERY_CONSTANT_TYPE_ROW,
+  QUERY_CONSTANT_TYPE_COL,
+  QUERY_CONSTANT_TYPE_NUMBER,
+} QUERY_CONSTANT_TYPE;
+typedef enum
+{
   QUERY_VALUE_TYPE_INVALID,
-  QUERY_VALUE_TYPE_ROW,
-  QUERY_VALUE_TYPE_COL,
-  QUERY_VALUE_TYPE_R,
-  QUERY_VALUE_TYPE_G,
-  QUERY_VALUE_TYPE_B,
-  QUERY_VALUE_TYPE_A,
-  QUERY_VALUE_TYPE_WIDTH,
-  QUERY_VALUE_TYPE_HEIGHT,
-  QUERY_VALUE_TYPE_CONSTANT
+  QUERY_VALUE_TYPE_MEMBER,
+  QUERY_VALUE_TYPE_CONSTANT,
 } QUERY_VALUE_TYPE;
 typedef enum
 {
@@ -48,14 +58,35 @@ typedef enum
   QUERY_EXPRESSION_TYPE_DIV,
   QUERY_EXPRESSION_TYPE_MUL,
   QUERY_EXPRESSION_TYPE_MOD,
-  QUERY_EXPRESSION_TYPE_VALUE
+  QUERY_EXPRESSION_TYPE_SIN,
+  QUERY_EXPRESSION_TYPE_COS,
+  QUERY_EXPRESSION_TYPE_TAN,
+  QUERY_EXPRESSION_TYPE_ABS,
+  QUERY_EXPRESSION_TYPE_NEG,
+  QUERY_EXPRESSION_TYPE_VALUE,
 } QUERY_EXPRESSION_TYPE;
 
+struct QueryExpression;
+typedef struct
+{
+  QUERY_CONSTANT_TYPE type;
+  int value;
+} QueryConstant;
+typedef struct
+{
+  QUERY_MEMBER_TYPE type;
+  QUERY_TARGET target;
+  struct QueryExpression *row;
+  struct QueryExpression *col;
+} QueryMember;
 typedef struct
 {
   QUERY_VALUE_TYPE type;
-  QUERY_TARGET target;
-  int value;
+  union
+  {
+    QueryConstant constant;
+    QueryMember member;
+  };
 } QueryValue;
 typedef struct QueryExpression
 {
@@ -72,28 +103,32 @@ typedef struct QueryExpression
 } QueryExpression;
 typedef struct
 {
-  QueryValue lvalue;
-  QueryExpression rvalue;
+  QUERY_TARGET operating;
+  QueryMember lval;
+  QueryExpression rval;
 } QueryOperation;
 typedef struct
 {
   QUERY_TARGET selecting;
-  QUERY_TARGET reference;
   QueryExpression exp;
 } QuerySelection;
 typedef struct
 {
-  QuerySelection select;
+  QuerySelection selection;
   QueryOperation *operations;
-  int noperations;
+  int n_operations;
 } QueryProcedure;
 typedef struct
 {
-  QUERY_INIT_MODE mode;
-  int new_w;
-  int new_h;
+  QUERY_INIT_TYPE type;
+  QueryExpression width;
+  QueryExpression height;
+} QueryInit;
+typedef struct
+{
+  QueryInit init;
   QueryProcedure *procedures;
-  int nprocedures;
+  int n_procedures;
 } Query;
 
 #endif

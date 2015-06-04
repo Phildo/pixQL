@@ -1,20 +1,11 @@
-todo
-
+pass defaults/constants through parse
+known memory leaks on query parse errors
 general cleanup
 error checking
 'BLANK' as init option (or 'BLACK', 'WHITE', 'CLEAR', 'RANDOM', etc...)
 NEW actually works
-fix syntax
-  -each procdure
-    -single select
-    -multiple operates (separated by ;?)
-  - SELECT X FROM Y change to...
-    - SELECT FROM X
-    - OPERATE ON Y
-allow pixel access
-  -r = IN[0,12].r
-  -r = IN[0,r-1].r
-  -etc...
+implement new syntax
+implement indirect pixel access
 set colors as hex
   r = #FF
   r = 0xFF
@@ -24,30 +15,61 @@ bitmap format support
 png/jpg/etc... support
 tmp targets
 
-keywords
---------
-SELECT
-WHERE
-THEN
-OPERATE
-
-IN[n]
-OUT
-PIXEL
-  COL
-  ROW
-  COLOR
-    R
-    G
-    B
-    A
-
-CONSTANT = WIDTH, HEIGHT, {number}
-
 //pixql -i input.bmp -o output.bmp -q "SELECT IN WHERE COL % 100 = 0 AND ROW % 100 = 0 OPERATE PIXEL.COLOR = #FFFFFFFF;"
 pixql -i ~/Desktop/input.bmp -o ~/Desktop/output.bmp -q "COPY; SELECT WHERE COL < 100; OPERATE A = 0;"
 
-TARGET = IN, OUT
+INIT_MODE: COPY,CLEAR,WHITE,BLACK
+TARGET: IN,OUT
+ATTRIBUTE : COLOR,R,G,B,A,ROW,COL
+VALUE : MEMBER,CONSTANT
+CONSTANT : WIDTH,HEIGHT,ROW,COL,{number}
 
-[ [ COPY | BLANK | NEW(w,h) ] ; | ] SELECT {TARGET} [ FROM {TARGET} | ] WHERE [{TARGET}. | ]{PROPERTY} [ < | > | = ] [ [{TARGET}. | ]{PROPERTY} | {CONSTANT} ] AND ... ; OPERATE [ R | G | B | A ] = ;
+# MEMBER
+[ TARGET ]                                 \
+([ EXPRESSION ],[ EXPRESSION ])  #optional  | #optional
+.                                          /
+[ ATTRIBUTE ]
+
+# EXPRESSION
+([ EXPRESSION ])
+[ EXPRESSION ] AND [ EXPRESSION ]
+[ EXPRESSION ] OR [ EXPRESSION ]
+[ EXPRESSION ] < [ EXPRESSION ]
+[ EXPRESSION ] <= [ EXPRESSION ]
+[ EXPRESSION ] = [ EXPRESSION ]
+[ EXPRESSION ] != [ EXPRESSION ]
+[ EXPRESSION ] >= [ EXPRESSION ]
+[ EXPRESSION ] > [ EXPRESSION ]
+[ EXPRESSION ] * [ EXPRESSION ]
+[ EXPRESSION ] / [ EXPRESSION ]
+[ EXPRESSION ] + [ EXPRESSION ]
+[ EXPRESSION ] - [ EXPRESSION ]
+[ EXPRESSION ] % [ EXPRESSION ]
+NOT [ EXPRESSION ]
+SIN([ EXPRESSION ])
+COS([ EXPRESSION ])
+TAN([ EXPRESSION ])
+ABS([ EXPRESSION ])
+- [ EXPRESSION ]
+[ VALUE ]
+
+# SET MODE                                \
+[ INIT_MODE ]                              |
+([ EXPRESSION ],[ EXPRESSION ]) #optional  | #optional
+;                                         /
+
+# SET SELECTION                                \
+SELECT                            \             |
+[ TARGET ] #optional \             | #optional  |
+WHERE                 | #optional  |            |
+[ EXPRESSION ]       /             |            |
+;                                 /             |
+                                                | # repeatable
+# SET OPERATION                                 |
+OPERATE              \                          |
+[ TARGET ] #optional  |                         |
+[ MEMBER ]            |                         |
+=                     | # repeatable            |
+[ EXPRESSION ]        |                         |
+;                    /                         /
 

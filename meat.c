@@ -1,55 +1,75 @@
 #include "meat.h"
 
 #include <stdlib.h>
+#include <math.h>
 
-int evaluateValue(QueryValue *v, int row, int col, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+int evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
-  PixImg *t;
-  switch(v->target)
+  switch(c->type)
   {
-    case QUERY_TARGET_IN:  t = in; break;
-    case QUERY_TARGET_OUT: t = out; break;
-    case QUERY_TARGET_INVALID:
+    case QUERY_CONSTANT_TYPE_WIDTH: return target->width; break;
+    case QUERY_CONSTANT_TYPE_HEIGHT: return target->height; break;
+    case QUERY_CONSTANT_TYPE_ROW: return row; break;
+    case QUERY_CONSTANT_TYPE_COL: return col; break;
+    case QUERY_CONSTANT_TYPE_NUMBER: return c->value; break;
     default:
-      t = target;
-      break;
-  }
-  switch(v->type)
-  {
-    case QUERY_VALUE_TYPE_INVALID:
-      return 0;
-      break;
-    case QUERY_VALUE_TYPE_ROW:
-      return row;
-      break;
-    case QUERY_VALUE_TYPE_COL:
-      return col;
-      break;
-    case QUERY_VALUE_TYPE_R:
-      return pixAt(t, col, row)->r;
-      break;
-    case QUERY_VALUE_TYPE_G:
-      return pixAt(t, col, row)->g;
-      break;
-    case QUERY_VALUE_TYPE_B:
-      return pixAt(t, col, row)->b;
-      break;
-    case QUERY_VALUE_TYPE_A:
-      return pixAt(t, col, row)->a;
-      break;
-    case QUERY_VALUE_TYPE_WIDTH:
-      return t->width;
-      break;
-    case QUERY_VALUE_TYPE_HEIGHT:
-      return t->height;
-      break;
-    case QUERY_VALUE_TYPE_CONSTANT:
-      return v->value;
+      //error!
+      return -1;
       break;
   }
 }
 
-int evaluateExpression(QueryExpression *qexp, int row, int col, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+{
+  PixImg *t;
+  int prow;
+  int pcol;
+  switch(m->target)
+  {
+    case QUERY_TARGET_IN: t = in; break;
+    case QUERY_TARGET_OUT: t = out; break;
+    default: t = target; break;
+  }
+
+  if(m->row) prow = evaluateExpression(m->row,col,row,target,in,out,err);
+  else       prow = row;
+  if(m->col) pcol = evaluateExpression(m->col,col,row,target,in,out,err);
+  else       pcol = col;
+
+  switch(m->type)
+  {
+    case QUERY_MEMBER_TYPE_COLOR: return pixAt(t,pcol,prow)->r; break; //actually return color
+    case QUERY_MEMBER_TYPE_R: return pixAt(t,pcol,prow)->r;break;
+    case QUERY_MEMBER_TYPE_G: return pixAt(t,pcol,prow)->g;break;
+    case QUERY_MEMBER_TYPE_B: return pixAt(t,pcol,prow)->b;break;
+    case QUERY_MEMBER_TYPE_A: return pixAt(t,pcol,prow)->a;break;
+    case QUERY_MEMBER_TYPE_ROW: return prow; break;
+    case QUERY_MEMBER_TYPE_COL: return pcol; break;
+    default:
+      //error
+      return -1;
+      break;
+  }
+}
+
+int evaluateValue(QueryValue *v, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+{
+  switch(v->type)
+  {
+    case QUERY_VALUE_TYPE_MEMBER:
+      return evaluateMember(&v->member,col,row,target,in,out,err);
+    break;
+    case QUERY_VALUE_TYPE_CONSTANT:
+      return evaluateConstant(&v->constant,col,row,target,in,out,err);
+    break;
+    default:
+      //error
+      return -1;
+      break;
+  }
+}
+
+int evaluateExpression(QueryExpression *qexp, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
   switch(qexp->type)
   {
@@ -57,77 +77,104 @@ int evaluateExpression(QueryExpression *qexp, int row, int col, PixImg *target, 
       return 0;
       break;
     case QUERY_EXPRESSION_TYPE_OR:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) || evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) || evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_AND:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) && evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) && evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_NOT:
-      return !evaluateExpression(qexp->a, row, col, target, in, out, err);
+      return !evaluateExpression(qexp->a,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_EQ:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) == evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) == evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_NE:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) != evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) != evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_LT:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) < evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) < evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_LTE:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) <= evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) <= evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_GTE:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) >= evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) >= evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_GT:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) > evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) > evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_SUB:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) - evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) - evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_ADD:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) + evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) + evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_DIV:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) / evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) / evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_MUL:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) * evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) * evaluateExpression(qexp->b,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_MOD:
-      return evaluateExpression(qexp->a, row, col, target, in, out, err) % evaluateExpression(qexp->b, row, col, target, in, out, err);
+      return evaluateExpression(qexp->a,col,row,target,in,out,err) % evaluateExpression(qexp->b,col,row,target,in,out,err);
+      break;
+    case QUERY_EXPRESSION_TYPE_SIN:
+      return sin(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      break;
+    case QUERY_EXPRESSION_TYPE_COS:
+      return cos(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      break;
+    case QUERY_EXPRESSION_TYPE_TAN:
+      return tan(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      break;
+    case QUERY_EXPRESSION_TYPE_ABS:
+      return abs(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      break;
+    case QUERY_EXPRESSION_TYPE_NEG:
+      return -1 * evaluateExpression(qexp->a,col,row,target,in,out,err);
       break;
     case QUERY_EXPRESSION_TYPE_VALUE:
-      return evaluateValue(&qexp->v, row, col, target, in, out, err);
+      return evaluateValue(&qexp->v,col,row,target,in,out,err);
+      break;
+    default:
+      //error
+      return -1;
       break;
   }
 }
 
-void evaluateOperation(QueryOperation *op, int row, int col, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
-  int val = evaluateExpression(&op->rvalue, row, col, target, in, out, err);
-
-  switch(op->lvalue.type)
+  PixImg *t;
+  switch(op->operating)
   {
-    case QUERY_VALUE_TYPE_R:
-      pixAt(target, col, row)->r = val;
-      break;
-    case QUERY_VALUE_TYPE_G:
-      pixAt(target, col, row)->g = val;
-      break;
-    case QUERY_VALUE_TYPE_B:
-      pixAt(target, col, row)->b = val;
-      break;
-    case QUERY_VALUE_TYPE_A:
-      pixAt(target, col, row)->a = val;
-      break;
-    case QUERY_VALUE_TYPE_INVALID:
-    case QUERY_VALUE_TYPE_ROW:
-    case QUERY_VALUE_TYPE_COL:
-    case QUERY_VALUE_TYPE_WIDTH:
-    case QUERY_VALUE_TYPE_HEIGHT:
-    case QUERY_VALUE_TYPE_CONSTANT:
+    case QUERY_TARGET_IN: t = in; break;
+    case QUERY_TARGET_OUT: t = out; break;
+    default: t = target; break;
+  }
+
+  int val = evaluateExpression(&op->rvalue,col,row,target,in,out,err);
+
+  QueryMember *lval = op->lval;
+  int prow;
+  int pcol;
+
+  if(lval->row) prow = evaluateExpression(lval->row,col,row,target,in,out,err);
+  else          prow = row;
+  if(lval->col) pcol = evaluateExpression(lval->col,col,row,target,in,out,err);
+  else          pcol = col;
+
+  switch(lval->type)
+  {
+    case QUERY_MEMBER_TYPE_COLOR: pixAt(t,pcol,prow)->r = val; break; //actually use color
+    case QUERY_MEMBER_TYPE_R: pixAt(t,pcol,prow)->r = val; break;
+    case QUERY_MEMBER_TYPE_G: pixAt(t,pcol,prow)->g = val; break;
+    case QUERY_MEMBER_TYPE_B: pixAt(t,pcol,prow)->b = val; break;
+    case QUERY_MEMBER_TYPE_A: pixAt(t,pcol,prow)->a = val; break;
+    case QUERY_MEMBER_TYPE_ROW: break; //can of worms
+    case QUERY_MEMBER_TYPE_COL: break; //can of worms
+    default:
+      //error
       break;
   }
 }
@@ -142,9 +189,11 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   selection_mask = malloc(out_img->width*out_img->height*sizeof(byte));
 
   //MODIFY
-  switch(query->mode)
+  QueryInit *init = query->init;
+  //actually implement init types
+  switch(init->type)
   {
-    case QUERY_INIT_MODE_COPY:
+    case QUERY_INIT_TYPE_COPY:
     default:
     {
       for(int i = 0; i < in_img->height; i++)
@@ -166,7 +215,7 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
     for(int j = 0; j < in_img->width*in_img->height; j++)
       selection_mask[j] = 0;
 
-    s = &p->select;
+    s = &p->selection;
     switch(s->selecting)
     {
       case QUERY_TARGET_IN:  op_selection = in_img;  break;
@@ -174,15 +223,6 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       case QUERY_TARGET_INVALID:
       default:
         op_selection = in_img;
-        break;
-    }
-    switch(s->reference)
-    {
-      case QUERY_TARGET_IN:  sel_reference = in_img;  break;
-      case QUERY_TARGET_OUT: sel_reference = out_img; break;
-      case QUERY_TARGET_INVALID:
-      default:
-        sel_reference = in_img;
         break;
     }
 

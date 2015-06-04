@@ -217,7 +217,6 @@ int readToken(char *s, int offset, char *buff)
 int closingParen(char *q, int s, int e)
 {
   tokinit;
-  o = s;
 
   tok;
   if(!(teq("("))) return -1;//err("Expected '('");
@@ -236,7 +235,6 @@ int closingParen(char *q, int s, int e)
 int tokenAfterParenExpress(char *q, int s, int e)
 {
   tokinit;
-  o = s;
 
   l = closingParen(q,o,e);
   commit;
@@ -250,7 +248,6 @@ int tokenAfterParenExpress(char *q, int s, int e)
 int lastTokenLevelInRange(char *q, int s, int e, int level)
 {
   tokinit;
-  o = s;
 
   int last = -1;
 
