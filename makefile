@@ -14,6 +14,8 @@ SOURCES:=$(filter-out %/test.c, $(ALL_SOURCES))
 INPUT_FILE = ~/Desktop/input.bmp
 OUTPUT_FILE = ~/Desktop/output.bmp
 
+SAMPLE_QUERY = "COPY; SELECT WHERE R < 100; OPERATE SET B = 255;"
+
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)
 
@@ -21,7 +23,7 @@ run: $(OUTFILE)
 	./$(OUTFILE)
 
 runargs: $(OUTFILE)
-	./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q "COPY; SELECT WHERE R < 100; OPERATE B = 255;"
+	./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q $(SAMPLE_QUERY)
 
 $(OUTFILE).dSYM: $(HEADERS) $(SOURCES)
 	$(CC) $(DEBUG) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)
@@ -30,7 +32,7 @@ debug: $(OUTFILE).dSYM
 	$(DEBUGGER) $(OUTFILE)
 
 debugargs: $(OUTFILE).dSYM
-	$(DEBUGGER) --args ./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q "COPY; SELECT WHERE COL < 100; OPERATE SET R = 255;"
+	$(DEBUGGER) --args ./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q $(SAMPLE_QUERY)
 
 TEST_OUTFILE=pixql_test
 TEST_HEADERS:=$(ALL_HEADERS)
