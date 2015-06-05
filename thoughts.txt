@@ -1,3 +1,5 @@
+add asserts in query parsing
+KNOWN malloc BUG- -q = "SELECT WHERE COL = 3;"
 pass defaults/constants through parse
 known memory leaks on query parse errors
 general cleanup

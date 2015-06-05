@@ -19,6 +19,7 @@ typedef struct
 } PixImg;
 
 Pix *pixAt(PixImg *img, uint32 col, uint32 row);
+Pix *set(Pix *pix, byte r, byte g, byte b, byte a);
 
 #endif
 

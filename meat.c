@@ -28,7 +28,11 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
   {
     case QUERY_TARGET_IN: t = in; break;
     case QUERY_TARGET_OUT: t = out; break;
-    default: t = target; break;
+    case QUERY_TARGET_FALLBACK: t = target; break;
+    case QUERY_TARGET_INVALID:
+    default:
+      //error
+      break;
   }
 
   if(m->row) prow = evaluateExpression(m->row,col,row,target,in,out,err);
@@ -150,7 +154,11 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
   {
     case QUERY_TARGET_IN: t = in; break;
     case QUERY_TARGET_OUT: t = out; break;
-    default: t = target; break;
+    case QUERY_TARGET_FALLBACK: t = target; break;
+    case QUERY_TARGET_INVALID:
+    default:
+      //error
+      break;
   }
 
   int val = evaluateExpression(&op->rval,col,row,target,in,out,err);
@@ -183,23 +191,48 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
 {
   byte *selection_mask;
 
-  out_img->width  = in_img->width;
-  out_img->height = in_img->height;
+  QueryInit *init = &query->init;
+  out_img->width = evaluateExpression(&init->width,-1,-1,in_img,in_img,out_img,err);
+  out_img->height = evaluateExpression(&init->height,-1,-1,in_img,in_img,out_img,err);
+  if(out_img->width  == 0) out_img->width = in_img->width;
+  if(out_img->height == 0) out_img->height = in_img->height;
+
   out_img->data  = malloc(out_img->width*out_img->height*sizeof(Pix));
   selection_mask = malloc(out_img->width*out_img->height*sizeof(byte));
 
-  //MODIFY
-  QueryInit *init = &query->init;
-  //actually implement init types
   switch(init->type)
   {
     case QUERY_INIT_TYPE_COPY:
+      {
+        for(int i = 0; i < in_img->height; i++)
+          for(int j = 0; j < in_img->width; j++)
+            *pixAt(out_img,j,i) = *pixAt(in_img,j,i);
+      }
+      break;
+    case QUERY_INIT_TYPE_CLEAR:
+      {
+        for(int i = 0; i < in_img->height; i++)
+          for(int j = 0; j < in_img->width; j++)
+            set(pixAt(out_img,j,i),0,0,0,0);
+      }
+      break;
+    case QUERY_INIT_TYPE_WHITE:
+      {
+        for(int i = 0; i < in_img->height; i++)
+          for(int j = 0; j < in_img->width; j++)
+            set(pixAt(out_img,j,i),255,255,255,255);
+      }
+      break;
+    case QUERY_INIT_TYPE_BLACK:
+      {
+        for(int i = 0; i < in_img->height; i++)
+          for(int j = 0; j < in_img->width; j++)
+            set(pixAt(out_img,j,i),0,0,0,255);
+      }
+      break;
+    case QUERY_INIT_TYPE_INVALID:
     default:
-    {
-      for(int i = 0; i < in_img->height; i++)
-        for(int j = 0; j < in_img->width; j++)
-          *pixAt(out_img,j,i) = *pixAt(in_img,j,i);
-    }
+      //error
       break;
   }
 
@@ -212,49 +245,43 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   {
     p = &query->procedures[i];
 
-    for(int j = 0; j < in_img->width*in_img->height; j++)
+    for(int j = 0; j < out_img->width*out_img->height; j++)
       selection_mask[j] = 0;
 
     s = &p->selection;
     switch(s->selecting)
     {
-      case QUERY_TARGET_IN:  default_selecting = in_img;  break;
+      case QUERY_TARGET_IN: default_selecting = in_img; break;
       case QUERY_TARGET_OUT: default_selecting = out_img; break;
+      case QUERY_TARGET_FALLBACK:
       case QUERY_TARGET_INVALID:
       default:
-        default_selecting = in_img;
+        //error
         break;
     }
 
     for(int k = 0; k < in_img->height; k++)
-    {
       for(int l = 0; l < in_img->width; l++)
-      {
-        if(evaluateExpression(&s->exp, l, k, default_selecting, in_img, out_img, err))
+        if(evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,err))
           selection_mask[(k*in_img->width)+l] = 1;
-      }
-    }
 
     for(int j = 0; j < p->n_operations; j++)
     {
       o = &p->operations[j];
       switch(o->operating)
       {
-        case QUERY_TARGET_IN:  default_operating = in_img;  break;
+        case QUERY_TARGET_IN: default_operating = in_img; break;
         case QUERY_TARGET_OUT: default_operating = out_img; break;
+        case QUERY_TARGET_FALLBACK:
         case QUERY_TARGET_INVALID:
         default:
-          default_operating = in_img;
+          //error
           break;
       }
 
       for(int k = 0; k < in_img->height; k++)
-      {
         for(int l = 0; l < in_img->width; l++)
-        {
-          evaluateOperation(o, l, k, default_operating, in_img, out_img, err);
-        }
-      }
+          evaluateOperation(o,l,k,default_operating,in_img,out_img,err);
     }
   }
 

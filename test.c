@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "err.h"
 #include "query.h"
 
@@ -16,6 +18,7 @@ int main(int argc, char **argv)
   q_str = "BLANK; SELECT WHERE COL < ROW; OPERATE R = 255; SELECT WHERE COL < (HEIGHT-ROW); OPERATE B = 255;";
   */
 
-  parseQuery(q_str, &query, &err);
+  if(!parseQuery(q_str, &query, &err))
+  { fprintf(stderr,"%s",err.info); return 1; }
 }
 

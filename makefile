@@ -11,7 +11,7 @@ ALL_SOURCES:=$(wildcard $(CURDIR)/$(SRCDIR)/*.c)
 HEADERS:=$(ALL_HEADERS)
 SOURCES:=$(filter-out %/test.c, $(ALL_SOURCES))
 
-INPUT_FILE = ~/Desktop/simple_red_input.bmp
+INPUT_FILE = ~/Desktop/input.bmp
 OUTPUT_FILE = ~/Desktop/output.bmp
 
 $(OUTFILE): $(HEADERS) $(SOURCES)

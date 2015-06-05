@@ -226,51 +226,53 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL:
-      m->target = QUERY_TARGET_IN;
+      m->target = QUERY_TARGET_FALLBACK;
       QERRORCLEAN;
     break;
-    case QUERY_ERROR_TYPE_NONE:
-      commit;
-
-      tok;
-      if(teq("("))
-      {
-        commit;
-
-        tmp_pos = charPos(q,',',o);
-        m->row = malloc(sizeof(QueryExpression));
-        l = parseIntoExpression(q,o,tmp_pos,0,m->row,err);
-        switch(err->type)
-        {
-          case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
-          case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
-          case QUERY_ERROR_TYPE_NONE: commit; break;
-        }
-
-        tok;
-        if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ','");
-        commit;
-
-        m->col = malloc(sizeof(QueryExpression));
-        l = parseIntoExpression(q,o,e,0,m->col,err);
-        switch(err->type)
-        {
-          case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
-          case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
-          case QUERY_ERROR_TYPE_NONE: commit; break;
-        }
-
-        tok;
-        if(!teq(")")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ')'");
-        commit;
-        tok;
-      }
-      if(!teq(".")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected '.'");
-      commit;
-    break;
+    case QUERY_ERROR_TYPE_NONE: commit; break;
   }
 
   tok;
+  if(teq("("))
+  {
+    commit;
+
+    tmp_pos = charPos(q,',',o);
+    m->row = malloc(sizeof(QueryExpression));
+    l = parseIntoExpression(q,o,tmp_pos,0,m->row,err);
+    switch(err->type)
+    {
+      case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+      case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
+      case QUERY_ERROR_TYPE_NONE: commit; break;
+    }
+
+    tok;
+    if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ','");
+    commit;
+
+    m->col = malloc(sizeof(QueryExpression));
+    l = parseIntoExpression(q,o,e,0,m->col,err);
+    switch(err->type)
+    {
+      case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+      case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
+      case QUERY_ERROR_TYPE_NONE: commit; break;
+    }
+
+    tok;
+    if(!teq(")")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ')'");
+    commit;
+    tok;
+  }
+
+  if(o != s)
+  {
+    if(!teq(".")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected '.'");
+    commit;
+    tok;
+  }
+
        if(teq("color")) m->type = QUERY_MEMBER_TYPE_COLOR;
   else if(teq("r")) m->type = QUERY_MEMBER_TYPE_R;
   else if(teq("g")) m->type = QUERY_MEMBER_TYPE_G;
@@ -340,6 +342,21 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
 
   tok;
   if(!teq("operate")) QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing operation, expected 'OPERATE'");
+  commit;
+
+  l = parseIntoTarget(q,o,e,&op->operating,err);
+  switch(err->type)
+  {
+    case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+    case QUERY_ERROR_TYPE_OPTIONAL:
+      op->operating = QUERY_TARGET_IN;
+      QERRORCLEAN;
+      break;
+    case QUERY_ERROR_TYPE_NONE: commit; break;
+  }
+
+  tok;
+  if(!teq("set")) QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing operation, expected 'SET'");
   commit;
 
   l = parseIntoMember(q,o,e,&op->lval,err);
@@ -445,7 +462,11 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL:
       sel->selecting = QUERY_TARGET_IN;
-      sel->exp.type = QUERY_EXPRESSION_TYPE_TRUE;
+      //ridiculous...
+      sel->exp.type = QUERY_EXPRESSION_TYPE_VALUE;
+      sel->exp.v.type = QUERY_VALUE_TYPE_CONSTANT;
+      sel->exp.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+      sel->exp.v.constant.value = 1;
       QERRORCLEAN;
       break;
     case QUERY_ERROR_TYPE_NONE:
@@ -546,7 +567,14 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
   }
   else
   {
-    //set width and height exprs...
+    init->width.type = QUERY_EXPRESSION_TYPE_VALUE;
+    init->width.v.type = QUERY_VALUE_TYPE_CONSTANT;
+    init->width.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+    init->width.v.constant.value = 0;
+    init->height.type = QUERY_EXPRESSION_TYPE_VALUE;
+    init->height.v.type = QUERY_VALUE_TYPE_CONSTANT;
+    init->height.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+    init->height.v.constant.value = 0;
   }
 
   return o-s;
@@ -562,15 +590,24 @@ static int parseInit(char *q, int s, int e, Query *query, QueryError *err)
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL:
       query->init.type = QUERY_INIT_TYPE_COPY;
-      //set width and height exprs
+      //ridiculous...
+      query->init.width.type = QUERY_EXPRESSION_TYPE_VALUE;
+      query->init.width.v.type = QUERY_VALUE_TYPE_CONSTANT;
+      query->init.width.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+      query->init.width.v.constant.value = 0;
+      query->init.height.type = QUERY_EXPRESSION_TYPE_VALUE;
+      query->init.height.v.type = QUERY_VALUE_TYPE_CONSTANT;
+      query->init.height.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+      query->init.height.v.constant.value = 0;
       QERRORCLEAN;
       break;
-    case QUERY_ERROR_TYPE_NONE: commit; break;
+    case QUERY_ERROR_TYPE_NONE:
+      commit;
+      tok;
+      if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ';'");
+      commit;
+      break;
   }
-
-  tok;
-  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ';'");
-  commit;
 
   return o-s;
 }
@@ -605,7 +642,41 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
   initTokens();
   QueryError qerr;
   int l = parseIntoQuery(q, query, &qerr);
-  if(l == -1) ERROR(err,"%s",qerr.info);
+  if(l == -1)
+  {
+    //format two-line error output
+      //query error
+    int i = 0;
+    while(qerr.info[i] != '\0')
+    {
+      err->info[i] = qerr.info[i];
+      i++;
+    }
+    err->info[i] = '\n';
+    i++;
+      //query
+    int j = 0;
+    while(q[j] != '\0')
+    {
+      err->info[i] = q[j];
+      i++; j++;
+    }
+    err->info[i] = '\n';
+    i++;
+      //position
+    int k = 0;
+    while(k < qerr.position)
+    {
+      err->info[i] = ' ';
+      i++; k++;
+    }
+    err->info[i] = '^';
+    i++;
+    err->info[i] = '\n';
+    i++;
+    err->info[i] = '\0';
+    return ERR;
+  }
   return NO_ERR;
 }
 
