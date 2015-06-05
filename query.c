@@ -349,7 +349,6 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
     case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
     case QUERY_ERROR_TYPE_NONE: commit; break;
   }
-  commit;
 
   tok;
   if(!teq("=")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing operation, expected '='");
@@ -362,7 +361,6 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
     case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
     case QUERY_ERROR_TYPE_NONE: commit; break;
   }
-  commit;
 
   return o-s;
 }
@@ -405,7 +403,7 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
   tokinit;
 
   tok;
-  if(!teq("select")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected 'SELECT'");
+  if(!teq("select")) QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing selection, expected 'SELECT'");
   commit;
 
   l = parseIntoTarget(q,o,e,&sel->selecting,err);
@@ -415,7 +413,7 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
     case QUERY_ERROR_TYPE_OPTIONAL:
       sel->selecting = QUERY_TARGET_IN;
       QERRORCLEAN;
-    break;
+      break;
     case QUERY_ERROR_TYPE_NONE: commit; break;
   }
 
@@ -446,22 +444,24 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL:
-      //set default selection stuff
+      sel->selecting = QUERY_TARGET_IN;
+      sel->exp.type = QUERY_EXPRESSION_TYPE_TRUE;
       QERRORCLEAN;
-    break;
-    case QUERY_ERROR_TYPE_NONE: commit; break;
+      break;
+    case QUERY_ERROR_TYPE_NONE:
+      commit;
+      tok;
+      if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
+      commit;
+      break;
   }
-
-  tok;
-  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
-  commit;
 
   return o-s;
 }
 
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 {
-  basictokinit;
+  tokinit;
   int tmp_pos;
 
   int reading_procedures = 1;
@@ -493,6 +493,9 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
       break;
       case QUERY_ERROR_TYPE_NONE: commit; break;
     }
+
+    tok;
+    if(teq("")) reading_procedures = 0;
   }
 
   return o-s;
