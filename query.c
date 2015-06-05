@@ -265,6 +265,11 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     commit;
     tok;
   }
+  else
+  {
+    m->row = NULL;
+    m->col = NULL;
+  }
 
   if(o != s)
   {
