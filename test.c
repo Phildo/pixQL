@@ -1,14 +1,12 @@
+#include "err.h"
 #include "query.h"
-#include "token.h"
 
 int main(int argc, char **argv)
 {
-  initTokens();
-
+  PixErr err;
   Query query;
-  QueryError err;
-
   char *q_str;
+
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE A = 0;"; //simple
   /*
   q_str = "SELECT IN FROM IN WHERE COL < 100 AND ROW < 100; OPERATE R = 0; OPERATE G = 0;";

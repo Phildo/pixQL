@@ -219,6 +219,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
 static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *err)
 {
   tokinit;
+  int tmp_pos;
 
   l = parseIntoTarget(q,o,e,&m->target,err);
   switch(err->type)
@@ -230,14 +231,15 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     break;
     case QUERY_ERROR_TYPE_NONE:
       commit;
+
       tok;
       if(teq("("))
       {
+        commit;
 
-        //find placement of ,
-
+        tmp_pos = charPos(q,',',o);
         m->row = malloc(sizeof(QueryExpression));
-        l = parseIntoExpression(q,o,e,0,m->row,err);
+        l = parseIntoExpression(q,o,tmp_pos,0,m->row,err);
         switch(err->type)
         {
           case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -362,16 +364,12 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
   }
   commit;
 
-  tok;
-  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing operation, expected ';'");
-  commit;
-
   return o-s;
 }
 
 static int parseOperations(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
-  basictokinit;
+  tokinit;
 
   int reading_operations = 1;
   while(reading_operations)
@@ -389,8 +387,13 @@ static int parseOperations(char *q, int s, int e, QueryProcedure *pro, QueryErro
         if(pro->n_operations == 0) QERRORUP;
         QERRORCLEAN;
         reading_operations = 0;
-      break;
-      case QUERY_ERROR_TYPE_NONE: commit; break;
+        break;
+      case QUERY_ERROR_TYPE_NONE:
+        commit;
+        tok;
+        if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing operation, expected ';'");
+        commit;
+        break;
     }
   }
 
@@ -430,16 +433,12 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
     }
   }
 
-  tok;
-  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
-  commit;
-
   return o-s;
 }
 
 static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
-  basictokinit;
+  tokinit;
 
   QuerySelection *sel = &pro->selection;
   l = parseIntoSelection(q,o,e,sel,err);
@@ -453,12 +452,17 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
     case QUERY_ERROR_TYPE_NONE: commit; break;
   }
 
+  tok;
+  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
+  commit;
+
   return o-s;
 }
 
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 {
   basictokinit;
+  int tmp_pos;
 
   int reading_procedures = 1;
   while(reading_procedures)
@@ -467,7 +471,8 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
     query->n_procedures++;
     QueryProcedure *pro = &query->procedures[query->n_procedures-1];
 
-    l = parseSelection(q,o,e,pro,err);
+    tmp_pos = charPos(q,';',o);
+    l = parseSelection(q,o,tmp_pos,pro,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -475,7 +480,8 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
       case QUERY_ERROR_TYPE_NONE: commit; break;
     }
 
-    l = parseOperations(q,o,e,pro,err);
+    tmp_pos = charPos(q,';',o);
+    l = parseOperations(q,o,tmp_pos,pro,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -495,6 +501,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err)
 {
   tokinit;
+  int tmp_pos;
 
   tok;
        if(teq("copy")) init->type = QUERY_INIT_TYPE_COPY;
@@ -509,9 +516,8 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
   {
     commit;
 
-    //find placement of ,
-
-    l = parseIntoExpression(q,o,e,0,&init->width,err);
+    tmp_pos = charPos(q,',',o);
+    l = parseIntoExpression(q,o,tmp_pos,0,&init->width,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -540,16 +546,12 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
     //set width and height exprs...
   }
 
-  tok;
-  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ';'");
-  commit;
-
   return o-s;
 }
 
 static int parseInit(char *q, int s, int e, Query *query, QueryError *err)
 {
-  basictokinit;
+  tokinit;
 
   l = parseIntoInit(q,o,s,&query->init,err);
   switch(err->type)
@@ -562,6 +564,10 @@ static int parseInit(char *q, int s, int e, Query *query, QueryError *err)
       break;
     case QUERY_ERROR_TYPE_NONE: commit; break;
   }
+
+  tok;
+  if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ';'");
+  commit;
 
   return o-s;
 }

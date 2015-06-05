@@ -14,6 +14,13 @@ int strLen(char *s)
   while(s[i] != '\0') i++;
   return i;
 }
+int charPos(char *s, char c, int o)
+{
+  while(s[o] != c && s[o] != '\0')
+    o++;
+  if(s[o] == '\0') return -1;
+  return o;
+}
 char toLower(char c)
 {
   if(c >= 'A' && c <= 'Z')
