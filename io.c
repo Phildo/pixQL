@@ -115,15 +115,69 @@ ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
   return NO_ERR;
 }
 
-void writeBitmap(const char *outfile, PixImg *img, PixErr *err)
+void writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err)
 {
   FILE *out;
   if(!(out = fopen(outfile, "w"))) return;//ERROR(1,"Can't open output file- %s",outfile);
   FILE *in; //THIS IS DUMB
-  if(!(in = fopen(outfile, "r"))) return;//ERROR(1,"Can't open input file- %s",outfile);
+  if(!(in = fopen(bmptemplate, "r"))) return;//ERROR(1,"Can't open input file- %s",bmptemplate);
+
+
+
+
+
+
 
   Bitmap b;
-  //need to populate bitmap w/ meaningful data...
+
+  BitmapFileHeader *bh = &b.bitmap_file_header;
+  DIBHeader *dh = &b.dib_header;
+  BITMAPINFOHEADER *ih;
+
+  //bitmap_header
+  #define READFIELD(field,fp) if(sizeof(field) != fread(&field, sizeof(byte), sizeof(field), fp)) return;//ERROR(1,"%s",invalid);
+
+  //read header_field
+  READFIELD(bh->header_field,in);
+  READFIELD(bh->size,in);
+  READFIELD(bh->reserved_a,in);
+  READFIELD(bh->reserved_b,in);
+  READFIELD(bh->offset,in);
+
+  //read dib_header
+  READFIELD(dh->header_size,in);
+  ih = 0;
+  switch(dh->header_size)
+  {
+    case BITMAPINFOHEADER_SIZE:
+      ih = &dh->bitmap_info_header;
+    case BITMAPV5HEADER_SIZE:
+      ih = (BITMAPINFOHEADER *)&dh->bitmap_v5_header;
+      break;
+    case BITMAPCOREHEADER_SIZE:
+    case OS22XBITMAPHEADER_SIZE:
+    case BITMAPV2INFOHEADER_SIZE:
+    case BITMAPV3INFOHEADER_SIZE:
+    case BITMAPV4HEADER_SIZE:
+    default:
+      //ERROR(1,"Unsupported DIB header\n");
+      break;
+  }
+  READFIELD(ih->width,in);
+  READFIELD(ih->height,in);
+  READFIELD(ih->nplanes,in);
+  READFIELD(ih->bpp,in);
+
+  fseek(in, bh->offset, SEEK_SET);
+  b.extra_info.row_w = ((ih->bpp*ih->width+31)/32)*4;
+  b.extra_info.pixel_n_bytes = b.extra_info.row_w*ih->height;
+  b.pixel_array = malloc(b.extra_info.pixel_n_bytes);
+  if(b.extra_info.pixel_n_bytes != fread(b.pixel_array, sizeof(byte), b.extra_info.pixel_n_bytes, in)) return;//ERROR(1,"%s",invalid);
+
+
+
+
+
 
   byte *indata = malloc(b.bitmap_file_header.size);
   fseek(in, 0, SEEK_SET);
@@ -135,12 +189,13 @@ void writeBitmap(const char *outfile, PixImg *img, PixErr *err)
 
   fwrite(b.pixel_array, sizeof(byte), b.extra_info.pixel_n_bytes, out);
 
+  fclose(in);
   fclose(out);
 }
 
-ERR_EXISTS writeFile(const char *outfile, PixImg *img, PixErr *err)
+ERR_EXISTS writeFile(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err)
 {
-  writeBitmap(outfile, img, err);
+  writeBitmap(outfile, bmptemplate, img, err);
 
   return NO_ERR;
 }

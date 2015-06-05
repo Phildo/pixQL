@@ -11,7 +11,7 @@ ALL_SOURCES:=$(wildcard $(CURDIR)/$(SRCDIR)/*.c)
 HEADERS:=$(ALL_HEADERS)
 SOURCES:=$(filter-out %/test.c, $(ALL_SOURCES))
 
-INPUT_FILE = ~/Desktop/input.bmp
+INPUT_FILE = ~/Desktop/simple_input.bmp
 OUTPUT_FILE = ~/Desktop/output.bmp
 
 SAMPLE_QUERY = "COPY; SELECT WHERE R < 100; OPERATE SET B = 255;"
