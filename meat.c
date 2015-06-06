@@ -281,7 +281,8 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
 
       for(int k = 0; k < in_img->height; k++)
         for(int l = 0; l < in_img->width; l++)
-          evaluateOperation(o,l,k,default_operating,in_img,out_img,err);
+          if(selection_mask[(k*in_img->width)+l])
+            evaluateOperation(o,l,k,default_operating,in_img,out_img,err);
     }
   }
 

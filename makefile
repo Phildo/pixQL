@@ -11,10 +11,10 @@ ALL_SOURCES:=$(wildcard $(CURDIR)/$(SRCDIR)/*.c)
 HEADERS:=$(ALL_HEADERS)
 SOURCES:=$(filter-out %/test.c, $(ALL_SOURCES))
 
-INPUT_FILE = ~/Desktop/simple_input.bmp
+INPUT_FILE = ~/Desktop/red_input.bmp
 OUTPUT_FILE = ~/Desktop/output.bmp
 
-SAMPLE_QUERY = "COPY; SELECT WHERE R < 100; OPERATE SET B = 255;"
+SAMPLE_QUERY = "COPY; SELECT WHERE COL > 1; OPERATE SET B = 255;"
 
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)
