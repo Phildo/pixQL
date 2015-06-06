@@ -157,28 +157,29 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
     case QUERY_TARGET_FALLBACK: t = target; break;
     case QUERY_TARGET_INVALID:
     default:
+      t = target; //to clear up warning
       //error
       break;
   }
 
-  int val = evaluateExpression(&op->rval,col,row,target,in,out,err);
+  int val = evaluateExpression(&op->rval,col,row,t,in,out,err);
 
   QueryMember *lval = &op->lval;
   int prow;
   int pcol;
 
-  if(lval->row) prow = evaluateExpression(lval->row,col,row,target,in,out,err);
+  if(lval->row) prow = evaluateExpression(lval->row,col,row,t,in,out,err);
   else          prow = row;
-  if(lval->col) pcol = evaluateExpression(lval->col,col,row,target,in,out,err);
+  if(lval->col) pcol = evaluateExpression(lval->col,col,row,t,in,out,err);
   else          pcol = col;
 
   switch(lval->type)
   {
-    case QUERY_MEMBER_TYPE_COLOR: pixAt(t,pcol,prow)->r = val; break; //actually use color
-    case QUERY_MEMBER_TYPE_R: pixAt(t,pcol,prow)->r = val; break;
-    case QUERY_MEMBER_TYPE_G: pixAt(t,pcol,prow)->g = val; break;
-    case QUERY_MEMBER_TYPE_B: pixAt(t,pcol,prow)->b = val; break;
-    case QUERY_MEMBER_TYPE_A: pixAt(t,pcol,prow)->a = val; break;
+    case QUERY_MEMBER_TYPE_COLOR: pixAt(out,pcol,prow)->r = val; break; //actually use color
+    case QUERY_MEMBER_TYPE_R: pixAt(out,pcol,prow)->r = val; break;
+    case QUERY_MEMBER_TYPE_G: pixAt(out,pcol,prow)->g = val; break;
+    case QUERY_MEMBER_TYPE_B: pixAt(out,pcol,prow)->b = val; break;
+    case QUERY_MEMBER_TYPE_A: pixAt(out,pcol,prow)->a = val; break;
     case QUERY_MEMBER_TYPE_ROW: break; //can of worms
     case QUERY_MEMBER_TYPE_COL: break; //can of worms
     default:
