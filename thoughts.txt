@@ -1,3 +1,4 @@
+clamp operations? (R-12) for R = 11? 255? 0?
 corrupts when -i == -o
 add asserts in query parsing
 KNOWN malloc BUG- -q = "SELECT WHERE COL = 3;"
