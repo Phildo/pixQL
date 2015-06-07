@@ -188,6 +188,7 @@ int readToken(char *s, int offset, char *buff)
         buff[buff_i] = '\0';
         c = '\0';
       }
+        break;
       default:
         buff[buff_i++] = c;
         str_i++;

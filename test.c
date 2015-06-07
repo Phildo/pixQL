@@ -21,14 +21,14 @@ int main(int argc, char **argv)
   QueryConstant *con;
 
   char *q_str;
-
   int i = 0;
+
+  //TEST 0
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE SET A = 0;"; //simple
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
-  //test
   init = &query.init;
   if(init->type != QUERY_INIT_TYPE_COPY) ERR("Init type incorrect");
   if(query.n_procedures != 1) ERR("Wrong number procedures");
@@ -67,6 +67,70 @@ int main(int argc, char **argv)
   if(con->value != 0) ERR("Wrong constant value for 0");
 
   printf("Passed\n");
+  i++;
+
+
+  //TEST 1
+  q_str = "OPERATE SET R=0;"; //minimal
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 2
+  q_str = "OPERATE SET R = R-100;"; //operation
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 1
+  q_str = "OPERATE SET A = 0;"; //simple
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 1
+  q_str = "OPERATE SET A = 0;"; //simple
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 1
+  q_str = "OPERATE SET A = 0;"; //simple
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 1
+  q_str = "OPERATE SET A = 0;"; //simple
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+
 
   /*
   q_str = "SELECT IN FROM IN WHERE COL < 100 AND ROW < 100; OPERATE R = 0; OPERATE G = 0;";
