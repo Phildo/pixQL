@@ -174,7 +174,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       {
         int closeparen = closingParen(q, o, e);
         commit;
-        l = parseIntoExpression(q, o, closeparen, 0, qexp, err); //start level over
+        l = parseIntoExpression(q, o, o+closeparen, 0, qexp, err); //start level over
         switch(err->type)
         {
           case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;

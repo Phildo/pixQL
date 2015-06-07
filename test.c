@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 
 
   //TEST 2
-  q_str = "OPERATE SET R = R-100;"; //operation
+  q_str = "OPERATE SET R=R-100;"; //spacing
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -90,8 +90,8 @@ int main(int argc, char **argv)
   i++;
 
 
-  //TEST 1
-  q_str = "OPERATE SET A = 0;"; //simple
+  //TEST 3
+  q_str = "OPERATE SET R = R+10/2;"; //compound
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -100,8 +100,8 @@ int main(int argc, char **argv)
   i++;
 
 
-  //TEST 1
-  q_str = "OPERATE SET A = 0;"; //simple
+  //TEST 4
+  q_str = "OPERATE SET R = (R+10)/2;"; //parens + order of operations
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -110,8 +110,18 @@ int main(int argc, char **argv)
   i++;
 
 
-  //TEST 1
-  q_str = "OPERATE SET A = 0;"; //simple
+  //TEST 5
+  q_str = "OPERATE SET R = ((R))/2;"; //redundant/odd parens
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 6
+  q_str = "SELECT WHERE SIN(COL) < 0; OPERATE SET R = 0;"; //sin
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
