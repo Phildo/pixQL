@@ -57,9 +57,13 @@ const char *query_operation_tokens[] =
   "/",
   "*",
   "%",
+  "SIN",
+  "COS",
+  "TAN",
+  "ABS",
   ""
 };
-const int QUERY_NUM_OO_LEVELS = 8;
+const int QUERY_NUM_OO_LEVELS = 9;
 const int query_operation_token_oo_lvls[] = //manually keep in sync!
 {
   0, //"or",
@@ -76,6 +80,10 @@ const int query_operation_token_oo_lvls[] = //manually keep in sync!
   6, //"/",
   6, //"*",
   7, //"%",
+  8, //"SIN",
+  8, //"COS",
+  8, //"TAN",
+  8, //"ABS",
   0  //""
 };
 char **query_operation_tokens_of_oo_lvl[QUERY_NUM_OO_LEVELS];

@@ -167,7 +167,38 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       }
       break;
     }
-    case 8: // ( )
+    case 8: // SIN, COS, TAN, ABS
+    {
+      tok;
+      if(isTokenLevel(token, level))
+      {
+        commit;
+             if(teq("sin")) qexp->type = QUERY_EXPRESSION_TYPE_SIN;
+        else if(teq("cos")) qexp->type = QUERY_EXPRESSION_TYPE_COS;
+        else if(teq("tan")) qexp->type = QUERY_EXPRESSION_TYPE_TAN;
+        else if(teq("abs")) qexp->type = QUERY_EXPRESSION_TYPE_ABS;
+        qexp->a = malloc(sizeof(QueryExpression));
+        l = parseIntoExpression(q, o, e, level, qexp->a, err);
+        switch(err->type)
+        {
+          case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+          case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
+          case QUERY_ERROR_TYPE_NONE: commit; break;
+        }
+      }
+      else
+      {
+        l = parseIntoExpression(q, o, e, level+1, qexp, err);
+        switch(err->type)
+        {
+          case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+          case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
+          case QUERY_ERROR_TYPE_NONE: commit; break;
+        }
+      }
+      break;
+    }
+    case 9: // ( )
     {
       tok;
       if(teq("("))
@@ -198,7 +229,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       }
       break;
     }
-    case 9: // value
+    case 10: // value
     {
       qexp->type = QUERY_EXPRESSION_TYPE_VALUE;
       l = parseIntoValue(q,o,e,&qexp->v,err);
