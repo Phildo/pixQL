@@ -29,18 +29,6 @@ void initTokens()
   tokens_init = 1;
 }
 
-const char *query_init_tokens[] =
-{
-  "new",
-  "copy",
-  "blank"
-};
-const char *query_src_tokens[] =
-{
-  "in",
-  "out",
-  ""
-};
 const char *query_operation_tokens[] =
 {
   "or",

@@ -1,11 +1,9 @@
+sin functions, but immediately gets clamped. hold value as float til last minute?
 clamp operations? (R-12) for R = 11? 255? 0?
 corrupts when -i == -o
 add asserts in query parsing
 KNOWN malloc BUG- -q = "SELECT WHERE COL = 3;"
-pass defaults/constants through parse
 known memory leaks on query parse errors
-general cleanup
-error checking
 'BLANK' as init option (or 'BLACK', 'WHITE', 'CLEAR', 'RANDOM', etc...)
 NEW actually works
 implement new syntax

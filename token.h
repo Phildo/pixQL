@@ -2,8 +2,6 @@
 #define _TOKEN_H_
 
 extern int tokens_init;
-extern const char *query_init_tokens[];
-extern const char *query_src_tokens[];
 extern const char *query_operation_tokens[];
 extern const int QUERY_NUM_OO_LEVELS;
 extern const int query_operation_token_oo_lvls[];
