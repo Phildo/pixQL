@@ -219,7 +219,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
 static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *err)
 {
   tokinit;
-  int tmp_pos;
+  int tmp_pos = 0;
 
   l = parseIntoTarget(q,o,e,&m->target,err);
   switch(err->type)
@@ -488,7 +488,7 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 {
   tokinit;
-  int tmp_pos;
+  int tmp_pos = 0;
 
   int reading_procedures = 1;
   while(reading_procedures)
@@ -530,7 +530,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err)
 {
   tokinit;
-  int tmp_pos;
+  int tmp_pos = 0;
 
   tok;
        if(teq("copy")) init->type = QUERY_INIT_TYPE_COPY;
@@ -645,7 +645,7 @@ static int parseIntoQuery(char *q, Query *query, QueryError *err)
 ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
 {
   initTokens();
-  QueryError qerr;
+  QueryError qerr = {0};
   int l = parseIntoQuery(q, query, &qerr);
   if(l == -1)
   {

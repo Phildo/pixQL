@@ -127,6 +127,7 @@ typedef struct
 } QueryInit;
 typedef struct
 {
+  long zero_pad;
   QueryInit init;
   QueryProcedure *procedures;
   int n_procedures;

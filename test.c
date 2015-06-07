@@ -9,7 +9,13 @@ int main(int argc, char **argv)
   Query query;
   char *q_str;
 
+  int i = 0;
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE SET A = 0;"; //simple
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  { fprintf(stderr,"%s",err.info); return 1; }
+  printf("Passed\n");
+
   /*
   q_str = "SELECT IN FROM IN WHERE COL < 100 AND ROW < 100; OPERATE R = 0; OPERATE G = 0;";
   q_str = "SELECT OUT FROM IN WHERE A < 128; OPERATE R = A;
@@ -18,7 +24,5 @@ int main(int argc, char **argv)
   q_str = "BLANK; SELECT WHERE COL < ROW; OPERATE R = 255; SELECT WHERE COL < (HEIGHT-ROW); OPERATE B = 255;";
   */
 
-  if(!parseQuery(q_str, &query, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
 }
 

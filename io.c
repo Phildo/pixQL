@@ -102,7 +102,7 @@ void readBitmap(const char *infile, Bitmap *b, PixErr *err)
 
 ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
 {
-  Bitmap b;
+  Bitmap b = {0};
   readBitmap(infile, &b, err);
 
   img->width  = b.dib_header.bitmap_info_header.width;
@@ -128,7 +128,7 @@ void writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixE
 
 
 
-  Bitmap b;
+  Bitmap b = {0};
 
   BitmapFileHeader *bh = &b.bitmap_file_header;
   DIBHeader *dh = &b.dib_header;

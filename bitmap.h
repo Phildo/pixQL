@@ -101,6 +101,7 @@ typedef union DIBHeader
 enum { EXTRA_BIT_MASKS_SIZE = 14 };
 typedef struct
 {
+  long zero_pad;
   BitmapFileHeader bitmap_file_header;
   DIBHeader dib_header;
   byte extra_bit_masks[EXTRA_BIT_MASKS_SIZE];

@@ -12,6 +12,7 @@ typedef enum
 
 typedef struct
 {
+  long zero_pad;
   char info[256];
 } PixErr;
 

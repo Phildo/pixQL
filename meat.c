@@ -22,8 +22,8 @@ int evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg 
 int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
   PixImg *t;
-  int prow;
-  int pcol;
+  int prow = 0;
+  int pcol = 0;
   switch(m->target)
   {
     case QUERY_TARGET_IN: t = in; break;
@@ -165,8 +165,8 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
   int val = evaluateExpression(&op->rval,col,row,t,in,out,err);
 
   QueryMember *lval = &op->lval;
-  int prow;
-  int pcol;
+  int prow = 0;
+  int pcol = 0;
 
   if(lval->row) prow = evaluateExpression(lval->row,col,row,t,in,out,err);
   else          prow = row;
