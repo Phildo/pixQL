@@ -3,17 +3,69 @@
 #include "err.h"
 #include "query.h"
 
+#define ERR(s,...) { fprintf(stderr,s,##__VA_ARGS__); return 1; }
+
 int main(int argc, char **argv)
 {
   PixErr err;
   Query query;
+  QueryInit *init;
+  QueryProcedure *pro;
+  QuerySelection *sel;
+  QueryOperation *op;
+  QueryExpression *exp;
+  QueryExpression *expa;
+  QueryExpression *expb;
+  QueryValue *val;
+  QueryMember *mem;
+  QueryConstant *con;
+
   char *q_str;
 
   int i = 0;
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE SET A = 0;"; //simple
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  ERR("%s",err.info);
+
+  //test
+  init = &query.init;
+  if(init->type != QUERY_INIT_TYPE_COPY) ERR("Init type incorrect");
+  if(query.n_procedures != 1) ERR("Wrong number procedures");
+  pro = query.procedures;
+  sel = &pro->selection;
+  if(sel->selecting != QUERY_TARGET_IN) ERR("Wrong selection target");
+  exp = &sel->exp;
+  if(exp->type != QUERY_EXPRESSION_TYPE_LT) ERR("Wrong selection expression type");
+  expa = exp->a;
+  if(expa->type != QUERY_EXPRESSION_TYPE_VALUE) ERR("Wrong selection expression type for COL");
+  val = &expa->v;
+  if(val->type != QUERY_VALUE_TYPE_CONSTANT) ERR("Wrong value type for COL");
+  con = &val->constant;
+  if(con->type != QUERY_CONSTANT_TYPE_COL) ERR("Wrong constant type for COL");
+  expb = exp->b;
+  if(expb->type != QUERY_EXPRESSION_TYPE_VALUE) ERR("Wrong selection expression type for 100");
+  val = &expb->v;
+  if(val->type != QUERY_VALUE_TYPE_CONSTANT) ERR("Wrong value type for 100");
+  con = &val->constant;
+  if(con->type != QUERY_CONSTANT_TYPE_NUMBER) ERR("Wrong constant type for 100");
+  if(con->value != 100) ERR("Wrong constant value for 100");
+  if(pro->n_operations != 1) ERR("Wrong num operations");
+  op = pro->operations;
+  if(op->operating != QUERY_TARGET_IN) ERR("Wrong operating target");
+  mem = &op->lval;
+  if(mem->type != QUERY_MEMBER_TYPE_A) ERR("Wrong operation member type");
+  if(mem->target != QUERY_TARGET_FALLBACK) ERR("Wrong operation member target");
+  if(mem->row != NULL) ERR("Wrong operation member row");
+  if(mem->col != NULL) ERR("Wrong operation member col");
+  exp = &op->rval;
+  if(exp->type != QUERY_EXPRESSION_TYPE_VALUE) ERR("Wrong operation expression type for 0");
+  val = &exp->v;
+  if(val->type != QUERY_VALUE_TYPE_CONSTANT) ERR("Wrong value type for 0");
+  con = &val->constant;
+  if(con->type != QUERY_CONSTANT_TYPE_NUMBER) ERR("Wrong constant type for 0");
+  if(con->value != 0) ERR("Wrong constant value for 0");
+
   printf("Passed\n");
 
   /*
