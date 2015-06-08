@@ -121,6 +121,16 @@ int main(int argc, char **argv)
 
 
   //TEST 6
+  q_str = "SELECT WHERE COL%100 != 0; OPERATE SET R = 0;"; //compound delimeter token (!=,<=,etc...)
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 7
   q_str = "SELECT WHERE SIN(COL) < 0; OPERATE SET R = 0;"; //sin
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
@@ -130,8 +140,8 @@ int main(int argc, char **argv)
   i++;
 
 
-  //TEST 1
-  q_str = "OPERATE SET A = 0;"; //simple
+  //TEST 8
+  q_str = "SELECT WHERE COL%100 = 0 OR ROW % 100 = 0; OPERATE SET R = 255-R;"; //OR
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);

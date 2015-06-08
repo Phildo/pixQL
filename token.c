@@ -159,8 +159,6 @@ int readToken(char *s, int offset, char *buff)
       case '*':
       case '/':
       case '%':
-      case '>':
-      case '<':
       {
         if(buff_i == 0)
         {
@@ -173,12 +171,14 @@ int readToken(char *s, int offset, char *buff)
         break;
       //ambiguous delimeter
       case '!':
+      case '>':
+      case '<':
       {
         if(buff_i == 0)
         {
           buff[buff_i++] = c;
           str_i++;
-          if(s[offset+str_i+1] == '=')
+          if(s[offset+str_i] == '=')
           {
             buff[buff_i++] = '=';
             str_i++;
