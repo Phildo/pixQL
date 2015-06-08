@@ -400,7 +400,11 @@ static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryEr
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
     case QUERY_ERROR_TYPE_OPTIONAL: QERRORUP; break;
-    case QUERY_ERROR_TYPE_NONE: commit; break;
+    case QUERY_ERROR_TYPE_NONE:
+      if(op->lval.target == QUERY_TARGET_IN)
+        QERROR(QUERY_ERROR_TYPE_PARSE,"Error invalid query, cannot SET on target 'IN'");
+      commit;
+      break;
   }
 
   tok;
