@@ -425,6 +425,7 @@ static int parseOperations(char *q, int s, int e, QueryProcedure *pro, QueryErro
   int reading_operations = 1;
   while(reading_operations)
   {
+    e = charPos(q,';',o);
     pro->operations = expand(pro->operations, pro->n_operations, sizeof(QueryOperation));
     pro->n_operations++;
 
@@ -490,6 +491,7 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
 static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
   tokinit;
+  e = charPos(q,';',o);
 
   QuerySelection *sel = &pro->selection;
   l = parseIntoSelection(q,o,e,sel,err);
@@ -519,7 +521,6 @@ static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 {
   tokinit;
-  int tmp_pos = 0;
 
   int reading_procedures = 1;
   while(reading_procedures)
@@ -528,8 +529,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
     query->n_procedures++;
     QueryProcedure *pro = &query->procedures[query->n_procedures-1];
 
-    tmp_pos = charPos(q,';',o);
-    l = parseSelection(q,o,tmp_pos,pro,err);
+    l = parseSelection(q,o,e,pro,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -537,8 +537,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
       case QUERY_ERROR_TYPE_NONE: commit; break;
     }
 
-    tmp_pos = charPos(q,';',o);
-    l = parseOperations(q,o,tmp_pos,pro,err);
+    l = parseOperations(q,o,e,pro,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;

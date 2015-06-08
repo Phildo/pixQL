@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
 
   //TEST 7
-  q_str = "SELECT WHERE SIN(COL) < 0; OPERATE SET R = 0;"; //sin
+  q_str = "SELECT WHERE NOT COL %20 > 1; OPERATE SET R = 0;"; //not
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -141,6 +141,16 @@ int main(int argc, char **argv)
 
 
   //TEST 8
+  q_str = "SELECT WHERE SIN(COL) < 0; OPERATE SET R = 0;"; //sin
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 9
   q_str = "SELECT WHERE COL%100 = 0 OR ROW % 100 = 0; OPERATE SET R = 255-R;"; //OR
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
@@ -148,6 +158,18 @@ int main(int argc, char **argv)
 
   printf("Passed\n");
   i++;
+
+
+  //TEST 10
+  q_str = "OPERATE SET R = B; OPERATE SET A = 255-((R+G+B)/3);"; //compound operate with complex operations
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
 
 
 
