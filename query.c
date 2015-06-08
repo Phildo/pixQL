@@ -684,6 +684,16 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
   if(l == -1)
   {
     //format two-line error output
+    const int QUERY_DISP_LEN = 40;
+    //find subset of query to show
+    int qoff = 0;
+    int qlen = strlen(q);
+    if(qlen > QUERY_DISP_LEN)
+    {
+      qoff = qerr.position - 20;
+      if(qlen-qoff < QUERY_DISP_LEN) qoff = qlen-QUERY_DISP_LEN;
+      if(qoff < 0) qoff = 0;
+    }
       //query error
     int i = 0;
     while(qerr.info[i] != '\0')
@@ -694,17 +704,35 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
     err->info[i] = '\n';
     i++;
       //query
-    int j = 0;
-    while(q[j] != '\0')
+    int j = qoff;
+    if(qoff > 0)
+    {
+      err->info[i++] = '.';
+      err->info[i++] = '.';
+      err->info[i++] = '.';
+    }
+    while(q[j] != '\0' && j-qoff < QUERY_DISP_LEN)
     {
       err->info[i] = q[j];
       i++; j++;
     }
+    if(j-qoff >= QUERY_DISP_LEN)
+    {
+      err->info[i++] = '.';
+      err->info[i++] = '.';
+      err->info[i++] = '.';
+    }
     err->info[i] = '\n';
     i++;
       //position
-    int k = 0;
-    while(k < qerr.position)
+    int k = qoff;
+    if(qoff > 0)
+    {
+      err->info[i++] = ' ';
+      err->info[i++] = ' ';
+      err->info[i++] = ' ';
+    }
+    while(k < qerr.position && k-qoff < QUERY_DISP_LEN)
     {
       err->info[i] = ' ';
       i++; k++;
