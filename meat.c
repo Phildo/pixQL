@@ -287,6 +287,8 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
     }
   }
 
+  free(selection_mask);
+
   return NO_ERR;
 }
 

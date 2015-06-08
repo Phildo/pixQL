@@ -1,4 +1,5 @@
 #include <stdio.h>  //printf, fread, fwrite
+#include <stdlib.h>  //free (to please valgrind)
 
 #include "dotypes.h"
 #include "str.h"
@@ -52,6 +53,9 @@ int main(int argc, char **argv)
 
   if(!writeFile(outfile_str, infile_str, &out_img, &err))
   { fprintf(stderr,"%s",err.info); return 1; }
+
+  free(in_img.data);
+  free(out_img.data);
 
   return 0;
 }
