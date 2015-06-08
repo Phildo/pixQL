@@ -198,8 +198,8 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   if(out_img->width  == 0) out_img->width = in_img->width;
   if(out_img->height == 0) out_img->height = in_img->height;
 
-  out_img->data  = malloc(out_img->width*out_img->height*sizeof(Pix));
-  selection_mask = malloc(out_img->width*out_img->height*sizeof(byte));
+  out_img->data  = calloc(out_img->width*out_img->height*sizeof(Pix),1);
+  selection_mask = calloc(out_img->width*out_img->height*sizeof(byte),1);
 
   switch(init->type)
   {

@@ -94,7 +94,7 @@ void readBitmap(const char *infile, Bitmap *b, PixErr *err)
   fseek(in, bh->offset, SEEK_SET);
   b->extra_info.row_w = ((ih->bpp*ih->width+31)/32)*4;
   b->extra_info.pixel_n_bytes = b->extra_info.row_w*ih->height;
-  b->pixel_array = malloc(b->extra_info.pixel_n_bytes);
+  b->pixel_array = calloc(b->extra_info.pixel_n_bytes,1);
   if(b->extra_info.pixel_n_bytes != fread(b->pixel_array, sizeof(byte), b->extra_info.pixel_n_bytes, in)) return;//ERROR(1,"%s",invalid);
 
   fclose(in);
@@ -108,7 +108,7 @@ ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
   img->width  = b.dib_header.bitmap_info_header.width;
   img->height = b.dib_header.bitmap_info_header.height;
 
-  img->data = malloc(img->width*img->height*sizeof(Pix));
+  img->data = calloc(img->width*img->height*sizeof(Pix),1);
 
   dataToPix(b.pixel_array, b.dib_header.bitmap_info_header.bpp, b.extra_info.row_w, img, err);
 
@@ -171,7 +171,7 @@ void writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixE
   fseek(in, bh->offset, SEEK_SET);
   b.extra_info.row_w = ((ih->bpp*ih->width+31)/32)*4;
   b.extra_info.pixel_n_bytes = b.extra_info.row_w*ih->height;
-  b.pixel_array = malloc(b.extra_info.pixel_n_bytes);
+  b.pixel_array = calloc(b.extra_info.pixel_n_bytes,1);
   if(b.extra_info.pixel_n_bytes != fread(b.pixel_array, sizeof(byte), b.extra_info.pixel_n_bytes, in)) return;//ERROR(1,"%s",invalid);
 
 
@@ -179,7 +179,7 @@ void writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixE
 
 
 
-  byte *indata = malloc(b.bitmap_file_header.size);
+  byte *indata = calloc(b.bitmap_file_header.size,1);
   fseek(in, 0, SEEK_SET);
   fread( indata, sizeof(byte), b.bitmap_file_header.size, in);
   fwrite(indata, sizeof(byte), b.bitmap_file_header.size, out);

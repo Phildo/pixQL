@@ -30,7 +30,7 @@ typedef struct
 // One off helpers
 void *expand(void *src, int cur_n, int size)
 {
-  void *tmp = malloc((cur_n+1)*size);
+  void *tmp = calloc((cur_n+1)*size,1);
   if(cur_n > 0)
   {
     memcpy(tmp, src, cur_n*size);
@@ -84,7 +84,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       l = lastTokenLevelInRange(q,s,e,level);
       if(l >= 0)
       {
-        qexp->a = malloc(sizeof(QueryExpression));
+        qexp->a = calloc(sizeof(QueryExpression),1);
 
         l = parseIntoExpression(q, o, o+l, level, qexp->a, err);
         switch(err->type)
@@ -117,7 +117,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
           else QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing expression, expected operator");
 
           commit;
-          qexp->b = malloc(sizeof(QueryExpression));
+          qexp->b = calloc(sizeof(QueryExpression),1);
           l = parseIntoExpression(q, o, e, level+1, qexp->b, err);
           switch(err->type)
           {
@@ -146,7 +146,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       {
         commit;
         qexp->type = QUERY_EXPRESSION_TYPE_NOT;
-        qexp->a = malloc(sizeof(QueryExpression));
+        qexp->a = calloc(sizeof(QueryExpression),1);
         l = parseIntoExpression(q, o, e, level, qexp->a, err);
         switch(err->type)
         {
@@ -177,7 +177,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
         else if(teq("cos")) qexp->type = QUERY_EXPRESSION_TYPE_COS;
         else if(teq("tan")) qexp->type = QUERY_EXPRESSION_TYPE_TAN;
         else if(teq("abs")) qexp->type = QUERY_EXPRESSION_TYPE_ABS;
-        qexp->a = malloc(sizeof(QueryExpression));
+        qexp->a = calloc(sizeof(QueryExpression),1);
         l = parseIntoExpression(q, o, e, level, qexp->a, err);
         switch(err->type)
         {
@@ -269,7 +269,7 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     commit;
 
     tmp_pos = charPos(q,',',o);
-    m->row = malloc(sizeof(QueryExpression));
+    m->row = calloc(sizeof(QueryExpression),1);
     l = parseIntoExpression(q,o,tmp_pos,0,m->row,err);
     switch(err->type)
     {
@@ -282,7 +282,7 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ','");
     commit;
 
-    m->col = malloc(sizeof(QueryExpression));
+    m->col = calloc(sizeof(QueryExpression),1);
     l = parseIntoExpression(q,o,e,0,m->col,err);
     switch(err->type)
     {

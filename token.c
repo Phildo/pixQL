@@ -18,7 +18,7 @@ void initTokens()
   {
     while(ls[ci] == c) ci++;
 
-    lls[ls[si]] = malloc(((ci-si)+1)*sizeof(const char *));
+    lls[ls[si]] = calloc(((ci-si)+1)*sizeof(const char *),1);
     for(int j = 0; j < ci-si; j++)
       lls[ls[si]][j] = (char *)query_operation_tokens[si+j];
     lls[ls[si]][ci-si] = 0;
