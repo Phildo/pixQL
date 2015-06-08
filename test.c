@@ -170,6 +170,26 @@ int main(int argc, char **argv)
   i++;
 
 
+  //TEST 11
+  q_str = "SELECT WHERE R < B; OPERATE SET R = B; SELECT WHERE G < B; OPERATE SET G = B;"; //multiple procedures
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 12
+  q_str = "SELECT WHERE IN.R < IN.B; OPERATE SET R = OUT.B;";
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  printf("Passed\n");
+  i++;
+
+
 
 
 

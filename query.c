@@ -349,7 +349,7 @@ static int parseIntoValue(char *q, int s, int e, QueryValue *v, QueryError *err)
   switch(err->type)
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
-    case QUERY_ERROR_TYPE_OPTIONAL: break;
+    case QUERY_ERROR_TYPE_OPTIONAL: QERRORCLEAN; break;
     case QUERY_ERROR_TYPE_NONE:
       v->type = QUERY_VALUE_TYPE_CONSTANT;
       commit;
