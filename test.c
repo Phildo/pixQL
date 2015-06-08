@@ -66,6 +66,7 @@ int main(int argc, char **argv)
   if(con->type != QUERY_CONSTANT_TYPE_NUMBER) ERR("Wrong constant type for 0");
   if(con->value != 0) ERR("Wrong constant value for 0");
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -76,6 +77,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -86,6 +88,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -96,6 +99,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -106,6 +110,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -116,6 +121,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -126,6 +132,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -136,6 +143,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -146,6 +154,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -156,6 +165,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -166,6 +176,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -176,6 +187,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -186,6 +198,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 
@@ -196,6 +209,7 @@ int main(int argc, char **argv)
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
 
+  freeQuery(&query);
   printf("Passed\n");
   i++;
 

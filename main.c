@@ -54,6 +54,8 @@ int main(int argc, char **argv)
   if(!writeFile(outfile_str, infile_str, &out_img, &err))
   { fprintf(stderr,"%s",err.info); return 1; }
 
+  //to please valgrind
+  freeQuery(&query);
   free(in_img.data);
   free(out_img.data);
 

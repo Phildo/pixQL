@@ -39,6 +39,7 @@ void *expand(void *src, int cur_n, int size)
   return tmp;
 }
 
+
 static int parseIntoTarget(char *q, int s, int e, QUERY_TARGET *t, QueryError *err);
 static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression *qexp, QueryError *err);
 static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *err);
@@ -52,6 +53,15 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
 static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err);
 static int parseInit(char *q, int s, int e, Query *query, QueryError *err);
 static int parseIntoQuery(char *q, Query *query, QueryError *err);
+
+static void freeConstantContents(QueryConstant *qcon);
+static void freeMemberContents(QueryMember *qmem);
+static void freeValueContents(QueryValue *qval);
+static void freeExpressionContents(QueryExpression *qexp);
+static void freeOperationContents(QueryOperation *qop);
+static void freeSelectionContents(QuerySelection *qsel);
+static void freeProcedureContents(QueryProcedure *qpro);
+static void freeQueryContents(Query *q);
 
 
 static int parseIntoTarget(char *q, int s, int e, QUERY_TARGET *t, QueryError *err)
@@ -746,4 +756,110 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
   }
   return NO_ERR;
 }
+
+static void freeConstantContents(QueryConstant *qcon)
+{
+  //do nothing
+}
+
+static void freeMemberContents(QueryMember *qmem)
+{
+  //note- type does not matter
+  if(qmem->row)
+  {
+    freeExpressionContents(qmem->row);
+    free(qmem->row);
+  }
+  if(qmem->col)
+  {
+    freeExpressionContents(qmem->col);
+    free(qmem->col);
+  }
+}
+
+static void freeValueContents(QueryValue *qval)
+{
+  switch(qval->type)
+  {
+    case QUERY_VALUE_TYPE_MEMBER:
+      freeMemberContents(&qval->member);
+      break;
+    case QUERY_VALUE_TYPE_CONSTANT:
+      freeConstantContents(&qval->constant);
+      break;
+    case QUERY_VALUE_TYPE_INVALID:
+    default:
+      break;
+  }
+}
+
+static void freeExpressionContents(QueryExpression *qexp)
+{
+  switch(qexp->type)
+  {
+    case QUERY_EXPRESSION_TYPE_OR:
+    case QUERY_EXPRESSION_TYPE_AND:
+    case QUERY_EXPRESSION_TYPE_EQ:
+    case QUERY_EXPRESSION_TYPE_NE:
+    case QUERY_EXPRESSION_TYPE_LT:
+    case QUERY_EXPRESSION_TYPE_LTE:
+    case QUERY_EXPRESSION_TYPE_GTE:
+    case QUERY_EXPRESSION_TYPE_GT:
+    case QUERY_EXPRESSION_TYPE_SUB:
+    case QUERY_EXPRESSION_TYPE_ADD:
+    case QUERY_EXPRESSION_TYPE_DIV:
+    case QUERY_EXPRESSION_TYPE_MUL:
+    case QUERY_EXPRESSION_TYPE_MOD:
+      freeExpressionContents(qexp->a);
+      freeExpressionContents(qexp->b);
+      break;
+    case QUERY_EXPRESSION_TYPE_NOT: break;
+    case QUERY_EXPRESSION_TYPE_SIN: break;
+    case QUERY_EXPRESSION_TYPE_COS: break;
+    case QUERY_EXPRESSION_TYPE_TAN: break;
+    case QUERY_EXPRESSION_TYPE_ABS: break;
+    case QUERY_EXPRESSION_TYPE_NEG: break;
+      freeExpressionContents(qexp->a);
+      break;
+    case QUERY_EXPRESSION_TYPE_VALUE: break;
+      freeValueContents(&qexp->v);
+    default: break;
+  }
+}
+
+static void freeOperationContents(QueryOperation *qop)
+{
+  freeMemberContents(&qop->lval);
+  freeExpressionContents(&qop->rval);
+}
+
+static void freeSelectionContents(QuerySelection *qsel)
+{
+  freeExpressionContents(&qsel->exp);
+}
+
+static void freeProcedureContents(QueryProcedure *qpro)
+{
+  freeSelectionContents(&qpro->selection);
+
+  for(int i = 0; i < qpro->n_operations; i++)
+    freeOperationContents(&qpro->operations[i]);
+  free(qpro->operations);
+}
+
+static void freeQueryContents(Query *q)
+{
+  freeExpressionContents(&q->init.width);
+  freeExpressionContents(&q->init.height);
+
+  for(int i = 0; i < q->n_procedures; i++)
+    freeProcedureContents(&q->procedures[i]);
+  free(q->procedures);
+}
+
+void freeQuery(Query *q) //traverse query freeing malloc'd pointers
+{
+  freeQueryContents(q);
+}
+
 
