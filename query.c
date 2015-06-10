@@ -759,26 +759,31 @@ ERR_EXISTS parseQuery(char *q, Query *query, PixErr *err)
 
 static void freeConstantContents(QueryConstant *qcon)
 {
-  //do nothing
+  qcon->type = 0;
+  qcon->value = 0;
 }
 
 static void freeMemberContents(QueryMember *qmem)
 {
-  //note- type does not matter
+  qmem->type = 0;
+  qmem->target = 0;
   if(qmem->row)
   {
     freeExpressionContents(qmem->row);
     free(qmem->row);
+    qmem->row = 0;
   }
   if(qmem->col)
   {
     freeExpressionContents(qmem->col);
     free(qmem->col);
+    qmem->col = 0;
   }
 }
 
 static void freeValueContents(QueryValue *qval)
 {
+  qval->type = 0;
   switch(qval->type)
   {
     case QUERY_VALUE_TYPE_MEMBER:
@@ -795,6 +800,7 @@ static void freeValueContents(QueryValue *qval)
 
 static void freeExpressionContents(QueryExpression *qexp)
 {
+  qexp->type = 0;
   switch(qexp->type)
   {
     case QUERY_EXPRESSION_TYPE_OR:
@@ -811,7 +817,11 @@ static void freeExpressionContents(QueryExpression *qexp)
     case QUERY_EXPRESSION_TYPE_MUL:
     case QUERY_EXPRESSION_TYPE_MOD:
       freeExpressionContents(qexp->a);
+      free(qexp->a);
+      qexp->a = 0;
       freeExpressionContents(qexp->b);
+      free(qexp->b);
+      qexp->b = 0;
       break;
     case QUERY_EXPRESSION_TYPE_NOT: break;
     case QUERY_EXPRESSION_TYPE_SIN: break;
@@ -820,6 +830,7 @@ static void freeExpressionContents(QueryExpression *qexp)
     case QUERY_EXPRESSION_TYPE_ABS: break;
     case QUERY_EXPRESSION_TYPE_NEG: break;
       freeExpressionContents(qexp->a);
+      qexp->a = 0;
       break;
     case QUERY_EXPRESSION_TYPE_VALUE: break;
       freeValueContents(&qexp->v);
@@ -829,12 +840,14 @@ static void freeExpressionContents(QueryExpression *qexp)
 
 static void freeOperationContents(QueryOperation *qop)
 {
+  qop->operating = 0;
   freeMemberContents(&qop->lval);
   freeExpressionContents(&qop->rval);
 }
 
 static void freeSelectionContents(QuerySelection *qsel)
 {
+  qsel->selecting = 0;
   freeExpressionContents(&qsel->exp);
 }
 
@@ -845,16 +858,25 @@ static void freeProcedureContents(QueryProcedure *qpro)
   for(int i = 0; i < qpro->n_operations; i++)
     freeOperationContents(&qpro->operations[i]);
   free(qpro->operations);
+  qpro->operations = 0;
+  qpro->n_operations = 0;
+}
+
+static void freeInitContents(QueryInit *qini)
+{
+  qini->type = 0;
+  freeExpressionContents(&qini->width);
+  freeExpressionContents(&qini->height);
 }
 
 static void freeQueryContents(Query *q)
 {
-  freeExpressionContents(&q->init.width);
-  freeExpressionContents(&q->init.height);
-
+  freeInitContents(&q->init);
   for(int i = 0; i < q->n_procedures; i++)
     freeProcedureContents(&q->procedures[i]);
   free(q->procedures);
+  q->procedures = 0;
+  q->n_procedures = 0;
 }
 
 void freeQuery(Query *q) //traverse query freeing malloc'd pointers
