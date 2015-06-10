@@ -61,6 +61,7 @@ static void freeExpressionContents(QueryExpression *qexp);
 static void freeOperationContents(QueryOperation *qop);
 static void freeSelectionContents(QuerySelection *qsel);
 static void freeProcedureContents(QueryProcedure *qpro);
+static void freeInitContents(QueryInit *qini);
 static void freeQueryContents(Query *q);
 
 
@@ -783,7 +784,6 @@ static void freeMemberContents(QueryMember *qmem)
 
 static void freeValueContents(QueryValue *qval)
 {
-  qval->type = 0;
   switch(qval->type)
   {
     case QUERY_VALUE_TYPE_MEMBER:
@@ -796,11 +796,11 @@ static void freeValueContents(QueryValue *qval)
     default:
       break;
   }
+  qval->type = 0;
 }
 
 static void freeExpressionContents(QueryExpression *qexp)
 {
-  qexp->type = 0;
   switch(qexp->type)
   {
     case QUERY_EXPRESSION_TYPE_OR:
@@ -823,19 +823,21 @@ static void freeExpressionContents(QueryExpression *qexp)
       free(qexp->b);
       qexp->b = 0;
       break;
-    case QUERY_EXPRESSION_TYPE_NOT: break;
-    case QUERY_EXPRESSION_TYPE_SIN: break;
-    case QUERY_EXPRESSION_TYPE_COS: break;
-    case QUERY_EXPRESSION_TYPE_TAN: break;
-    case QUERY_EXPRESSION_TYPE_ABS: break;
-    case QUERY_EXPRESSION_TYPE_NEG: break;
+    case QUERY_EXPRESSION_TYPE_NOT:
+    case QUERY_EXPRESSION_TYPE_SIN:
+    case QUERY_EXPRESSION_TYPE_COS:
+    case QUERY_EXPRESSION_TYPE_TAN:
+    case QUERY_EXPRESSION_TYPE_ABS:
+    case QUERY_EXPRESSION_TYPE_NEG:
       freeExpressionContents(qexp->a);
+      free(qexp->a);
       qexp->a = 0;
       break;
-    case QUERY_EXPRESSION_TYPE_VALUE: break;
+    case QUERY_EXPRESSION_TYPE_VALUE:
       freeValueContents(&qexp->v);
     default: break;
   }
+  qexp->type = 0;
 }
 
 static void freeOperationContents(QueryOperation *qop)
