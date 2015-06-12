@@ -275,13 +275,13 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
   }
 
   tok;
-  if(teq("("))
+  if(teq("["))
   {
     commit;
 
     tmp_pos = charPos(q,',',o);
-    m->row = calloc(sizeof(QueryExpression),1);
-    l = parseIntoExpression(q,o,tmp_pos,0,m->row,err);
+    m->col = calloc(sizeof(QueryExpression),1);
+    l = parseIntoExpression(q,o,tmp_pos,0,m->col,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -293,8 +293,8 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ','");
     commit;
 
-    m->col = calloc(sizeof(QueryExpression),1);
-    l = parseIntoExpression(q,o,e,0,m->col,err);
+    m->row = calloc(sizeof(QueryExpression),1);
+    l = parseIntoExpression(q,o,e,0,m->row,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -303,14 +303,14 @@ static int parseIntoMember(char *q, int s, int e, QueryMember *m, QueryError *er
     }
 
     tok;
-    if(!teq(")")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ')'");
+    if(!teq("]")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing member, expected ')'");
     commit;
     tok;
   }
   else
   {
-    m->row = NULL;
     m->col = NULL;
+    m->row = NULL;
   }
 
   if(o != s)

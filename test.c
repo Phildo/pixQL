@@ -23,6 +23,20 @@ int main(int argc, char **argv)
   char *q_str = 0;
   int i = 0;
 
+
+  //TEST 15
+  q_str = "SELECT WHERE IN[ROW-1,COL].R < 100; OPERATE SET R = 0;"; //expression in accessor
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  freeQuery(&query);
+  printf("Passed\n");
+  i++;
+
+
+
+
   //TEST 0
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE SET A = 0;"; //simple
   printf("Test %d: %s\n",i,q_str);
@@ -214,17 +228,17 @@ int main(int argc, char **argv)
   i++;
 
 
+  //TEST 14
+  q_str = "SELECT WHERE IN[0,COL].R < 100; OPERATE SET R = 0;"; //simple accessor
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  freeQuery(&query);
+  printf("Passed\n");
+  i++;
 
 
-
-
-  /*
-  q_str = "SELECT IN FROM IN WHERE COL < 100 AND ROW < 100; OPERATE R = 0; OPERATE G = 0;";
-  q_str = "SELECT OUT FROM IN WHERE A < 128; OPERATE R = A;
-  q_str = "SELECT IN FROM OUT WHERE A < 128; OPERATE R = R/2;
-  q_str = "BLANK; SELECT WHERE A < (COL/WIDTH)*256; OPERATE R = 255;";
-  q_str = "BLANK; SELECT WHERE COL < ROW; OPERATE R = 255; SELECT WHERE COL < (HEIGHT-ROW); OPERATE B = 255;";
-  */
-
+  return 0;
 }
 

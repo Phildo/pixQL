@@ -31,6 +31,7 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
     case QUERY_TARGET_FALLBACK: t = target; break;
     case QUERY_TARGET_INVALID:
     default:
+      t = 0; //to shut up the compiler
       //error
       break;
   }
@@ -39,6 +40,8 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
   else       prow = row;
   if(m->col) pcol = evaluateExpression(m->col,col,row,target,in,out,err);
   else       pcol = col;
+  if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
+  if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
   switch(m->type)
   {
@@ -172,6 +175,8 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
   else          prow = row;
   if(lval->col) pcol = evaluateExpression(lval->col,col,row,t,in,out,err);
   else          pcol = col;
+  if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
+  if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
   switch(lval->type)
   {

@@ -153,6 +153,8 @@ int readToken(char *s, int offset, char *buff)
       case ',':
       case '(':
       case ')':
+      case '[':
+      case ']':
       case '=':
       case '+':
       case '-':
@@ -217,17 +219,29 @@ int readToken(char *s, int offset, char *buff)
 int closingParen(char *q, int s, int e)
 {
   tokinit;
+  char open_t[2] = {'\0','\0'};
+  char close_t[2] = {'\0','\0'};
 
   tok;
-  if(!(teq("("))) return -1;//err("Expected '('");
+  if(teq("("))
+  {
+    open_t[0] = '(';
+    close_t[0] = ')';
+  }
+  else if(teq("["))
+  {
+    open_t[0] = '[';
+    close_t[0] = ']';
+  }
+  else return -1;//err("Expected '('");
 
   int n_parens = 1;
   while(n_parens > 0 && o < e)
   {
     commit;
     tok;
-    if(teq("(")) n_parens++;
-    if(teq(")")) n_parens--;
+    if(teq(open_t))  n_parens++;
+    if(teq(close_t)) n_parens--;
   }
   return o-s;
 }
@@ -239,7 +253,7 @@ int tokenAfterParenExpress(char *q, int s, int e)
   l = closingParen(q,o,e);
   commit;
   tok;
-  if(!(teq(")"))) return -1;//err("Expected ')'");
+  if(!(teq(")")) && !(teq("]"))) return -1;//err("Expected ')'");
   commit;
 
   return o-s;
@@ -254,7 +268,7 @@ int lastTokenLevelInRange(char *q, int s, int e, int level)
   while(o < e)
   {
     tok;
-    if(teq("("))
+    if(teq("(") || teq("["))
     {
       l = tokenAfterParenExpress(q,o,e);
       commit;
