@@ -24,19 +24,6 @@ int main(int argc, char **argv)
   int i = 0;
 
 
-  //TEST 15
-  q_str = "SELECT WHERE IN[ROW-1,COL].R < 100; OPERATE SET R = 0;"; //expression in accessor
-  printf("Test %d: %s\n",i,q_str);
-  if(!parseQuery(q_str, &query, &err))
-  ERR("%s",err.info);
-
-  freeQuery(&query);
-  printf("Passed\n");
-  i++;
-
-
-
-
   //TEST 0
   q_str = "COPY; SELECT WHERE COL < 100; OPERATE SET A = 0;"; //simple
   printf("Test %d: %s\n",i,q_str);
@@ -186,7 +173,7 @@ int main(int argc, char **argv)
 
 
   //TEST 10
-  q_str = "OPERATE SET R = B; OPERATE SET A = 255-((R+G+B)/3);"; //compound operate with complex operations
+  q_str = "SELECT WHERE COL % 10 = 0; SELECT WHERE ROW % 10 = 0; OPERATE SET R = B; OPERATE SET B = G;"; //compound select, compound operate
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -197,7 +184,7 @@ int main(int argc, char **argv)
 
 
   //TEST 11
-  q_str = "SELECT WHERE R < B; OPERATE SET R = B; SELECT WHERE G < B; OPERATE SET G = B;"; //multiple procedures
+  q_str = "OPERATE SET R = B; OPERATE SET A = 255-((R+G+B)/3);"; //compound operate with complex operations
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -208,7 +195,7 @@ int main(int argc, char **argv)
 
 
   //TEST 12
-  q_str = "SELECT WHERE IN.R < IN.B; OPERATE SET R = OUT.B;"; //access targets
+  q_str = "SELECT WHERE R < B; OPERATE SET R = B; SELECT WHERE G < B; OPERATE SET G = B;"; //multiple procedures
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -219,7 +206,7 @@ int main(int argc, char **argv)
 
 
   //TEST 13
-  q_str = "WHITE; SELECT WHERE COL%100 < 50; OPERATE SET R = R; OPERATE SET G = G; OPERATE SET B = B; SELECT WHERE OUT.R = 255 AND OUT.G = 255 AND OUT.B = 255; OPERATE SET G = 255-G;"; //weird long compound
+  q_str = "SELECT WHERE IN.R < IN.B; OPERATE SET R = OUT.B;"; //access targets
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
@@ -230,7 +217,29 @@ int main(int argc, char **argv)
 
 
   //TEST 14
+  q_str = "WHITE; SELECT WHERE COL%100 < 50; OPERATE SET R = R; OPERATE SET G = G; OPERATE SET B = B; SELECT WHERE OUT.R = 255 AND OUT.G = 255 AND OUT.B = 255; OPERATE SET G = 255-G;"; //weird long compound
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  freeQuery(&query);
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 15
   q_str = "SELECT WHERE IN[0,COL].R < 100; OPERATE SET R = 0;"; //simple accessor
+  printf("Test %d: %s\n",i,q_str);
+  if(!parseQuery(q_str, &query, &err))
+  ERR("%s",err.info);
+
+  freeQuery(&query);
+  printf("Passed\n");
+  i++;
+
+
+  //TEST 16
+  q_str = "SELECT WHERE IN[ROW-1,COL].R < 100; OPERATE SET R = 0;"; //expression in accessor
   printf("Test %d: %s\n",i,q_str);
   if(!parseQuery(q_str, &query, &err))
   ERR("%s",err.info);
