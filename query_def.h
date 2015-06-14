@@ -115,7 +115,8 @@ typedef struct
 } QuerySelection;
 typedef struct
 {
-  QuerySelection selection;
+  QuerySelection *selections;
+  int n_selections;
   QueryOperation *operations;
   int n_operations;
 } QueryProcedure;

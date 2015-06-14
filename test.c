@@ -47,7 +47,8 @@ int main(int argc, char **argv)
   if(init->type != QUERY_INIT_TYPE_COPY) ERR("Init type incorrect");
   if(query.n_procedures != 1) ERR("Wrong number procedures");
   pro = query.procedures;
-  sel = &pro->selection;
+  if(pro->n_selections != 1) ERR("Wrong num selections");
+  sel = pro->selections;
   if(sel->selecting != QUERY_TARGET_IN) ERR("Wrong selection target");
   exp = &sel->exp;
   if(exp->type != QUERY_EXPRESSION_TYPE_LT) ERR("Wrong selection expression type");

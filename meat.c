@@ -21,7 +21,7 @@ int evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg 
 
 int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
-  PixImg *t;
+  PixImg *t = 0;
   int prow = 0;
   int pcol = 0;
   switch(m->target)
@@ -31,7 +31,6 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
     case QUERY_TARGET_FALLBACK: t = target; break;
     case QUERY_TARGET_INVALID:
     default:
-      t = 0; //to shut up the compiler
       //error
       break;
   }
@@ -242,11 +241,11 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       break;
   }
 
-  QueryProcedure *p;
-  QuerySelection *s;
-  QueryOperation *o;
-  PixImg *default_selecting;
-  PixImg *default_operating;
+  QueryProcedure *p = 0;
+  QuerySelection *s = 0;
+  QueryOperation *o = 0;
+  PixImg *default_selecting = 0;
+  PixImg *default_operating = 0;
   for(int i = 0; i < query->n_procedures; i++)
   {
     p = &query->procedures[i];
@@ -254,22 +253,25 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
     for(int j = 0; j < out_img->width*out_img->height; j++)
       selection_mask[j] = 0;
 
-    s = &p->selection;
-    switch(s->selecting)
+    for(int j = 0; j < p->n_selections; j++)
     {
-      case QUERY_TARGET_IN: default_selecting = in_img; break;
-      case QUERY_TARGET_OUT: default_selecting = out_img; break;
-      case QUERY_TARGET_FALLBACK:
-      case QUERY_TARGET_INVALID:
-      default:
-        //error
-        break;
-    }
+      s = &p->selections[j];
+      switch(s->selecting)
+      {
+        case QUERY_TARGET_IN: default_selecting = in_img; break;
+        case QUERY_TARGET_OUT: default_selecting = out_img; break;
+        case QUERY_TARGET_FALLBACK:
+        case QUERY_TARGET_INVALID:
+        default:
+          //error
+          break;
+      }
 
-    for(int k = 0; k < in_img->height; k++)
-      for(int l = 0; l < in_img->width; l++)
-        if(evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,err))
-          selection_mask[(k*in_img->width)+l] = 1;
+      for(int k = 0; k < in_img->height; k++)
+        for(int l = 0; l < in_img->width; l++)
+          if(evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,err))
+            selection_mask[(k*in_img->width)+l] = 1;
+    }
 
     for(int j = 0; j < p->n_operations; j++)
     {

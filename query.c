@@ -48,7 +48,7 @@ static int parseIntoValue(char *q, int s, int e, QueryValue *v, QueryError *err)
 static int parseIntoOperation(char *q, int s, int e, QueryOperation *op, QueryError *err);
 static int parseOperations(char *q, int s, int e, QueryProcedure *pro, QueryError *err);
 static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryError *err);
-static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError *err);
+static int parseSelections(char *q, int s, int e, QueryProcedure *pro, QueryError *err);
 static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err);
 static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err);
 static int parseInit(char *q, int s, int e, Query *query, QueryError *err);
@@ -503,31 +503,44 @@ static int parseIntoSelection(char *q, int s, int e, QuerySelection *sel, QueryE
   return o-s;
 }
 
-static int parseSelection(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
+static int parseSelections(char *q, int s, int e, QueryProcedure *pro, QueryError *err)
 {
   tokinit;
-  e = charPos(q,';',o);
 
-  QuerySelection *sel = &pro->selection;
-  l = parseIntoSelection(q,o,e,sel,err);
-  switch(err->type)
+  int reading_selections = 1;
+  while(reading_selections)
   {
-    case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
-    case QUERY_ERROR_TYPE_OPTIONAL:
-      sel->selecting = QUERY_TARGET_IN;
-      //ridiculous...
-      sel->exp.type = QUERY_EXPRESSION_TYPE_VALUE;
-      sel->exp.v.type = QUERY_VALUE_TYPE_CONSTANT;
-      sel->exp.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
-      sel->exp.v.constant.value = 1;
-      QERRORCLEAN;
-      break;
-    case QUERY_ERROR_TYPE_NONE:
-      commit;
-      tok;
-      if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
-      commit;
-      break;
+    e = charPos(q,';',o);
+    pro->selections = expand(pro->selections, pro->n_selections, sizeof(QuerySelection));
+    pro->n_selections++;
+
+    QuerySelection *sel = &pro->selections[pro->n_selections-1];
+    l = parseIntoSelection(q,o,e,sel,err);
+    switch(err->type)
+    {
+      case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
+      case QUERY_ERROR_TYPE_OPTIONAL:
+        if(pro->n_selections == 1)
+        {
+          sel->selecting = QUERY_TARGET_IN;
+          //ridiculous...
+          sel->exp.type = QUERY_EXPRESSION_TYPE_VALUE;
+          sel->exp.v.type = QUERY_VALUE_TYPE_CONSTANT;
+          sel->exp.v.constant.type = QUERY_CONSTANT_TYPE_NUMBER;
+          sel->exp.v.constant.value = 1;
+        }
+        else
+          pro->n_selections--;
+        QERRORCLEAN;
+        reading_selections = 0;
+        break;
+      case QUERY_ERROR_TYPE_NONE:
+        commit;
+        tok;
+        if(!teq(";")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing selection, expected ';'");
+        commit;
+        break;
+    }
   }
 
   return o-s;
@@ -544,7 +557,7 @@ static int parseProcedures(char *q, int s, int e, Query *query, QueryError *err)
     query->n_procedures++;
     QueryProcedure *pro = &query->procedures[query->n_procedures-1];
 
-    l = parseSelection(q,o,e,pro,err);
+    l = parseSelections(q,o,e,pro,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -855,13 +868,17 @@ static void freeSelectionContents(QuerySelection *qsel)
 
 static void freeProcedureContents(QueryProcedure *qpro)
 {
-  freeSelectionContents(&qpro->selection);
+  for(int i = 0; i < qpro->n_selections; i++)
+    freeSelectionContents(&qpro->selections[i]);
+  qpro->n_selections = 0;
+  free(qpro->selections);
+  qpro->selections = 0;
 
   for(int i = 0; i < qpro->n_operations; i++)
     freeOperationContents(&qpro->operations[i]);
+  qpro->n_operations = 0;
   free(qpro->operations);
   qpro->operations = 0;
-  qpro->n_operations = 0;
 }
 
 static void freeInitContents(QueryInit *qini)
