@@ -1,3 +1,10 @@
+PRIORITY:
+arbitrary bitmap
+terse operations
+float math
+"color" as attrib
+
+refactor to parse into non-string tokens, then make sense of them; rather than "try to read a 'value' NOW"
 allow terse operations- OPERATE SET R = 1, G = 2, B = 5;
 sin functions, but immediately gets clamped. hold value as float til last minute?
 clamp operations? (R-12) for R = 11? 255? 0?
