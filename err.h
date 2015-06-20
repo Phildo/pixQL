@@ -2,7 +2,7 @@
 #define _ERR_H_
 
 #include <stdio.h> //sprintf
-#define ERROR(err, ...) ({ sprintf(err->info, ##__VA_ARGS__); return ERR; })
+#define ERROR(...) ({ sprintf(err->info, ##__VA_ARGS__); return ERR; })
 
 typedef enum
 {

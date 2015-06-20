@@ -6,10 +6,6 @@
 #include "pix.h"
 #include "bitmap.h"
 
-void dataToPix(byte *data, int bpp, int roww, PixImg *img, PixErr *err);
-void pixToData(PixImg *img, int bpp, int roww, byte *data, PixErr *err);
-void readBitmap(const char *infile, Bitmap *b, PixErr *err);
-void writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err);;
 ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err);
 ERR_EXISTS writeFile(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err);;
 

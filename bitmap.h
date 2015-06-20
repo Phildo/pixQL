@@ -2,6 +2,7 @@
 #define _BITMAP_H_
 
 #include "dotypes.h"
+#include "err.h"
 
 /* spec from http://en.wikipedia.org/wiki/BMP_file_format */
 typedef struct
@@ -99,6 +100,20 @@ typedef union DIBHeader
 } DIBHeader;
 
 enum { EXTRA_BIT_MASKS_SIZE = 14 };
+
+//internal rep of bitmap
+//non-standardized struct
+//don't have to wade through versions to access data
+typedef struct
+{
+  uint32 width;
+  uint32 height;
+  uint32 bpp;
+  uint32 row_w;
+  uint32 pixel_n_bytes;
+  uint32 offset_to_data;
+} InternalBitmap;
+
 typedef struct
 {
   long zero_pad;
@@ -110,12 +125,12 @@ typedef struct
   byte *pixel_array;
   byte *gap2;
   byte *icc_color_profile;
-  struct
-  {
-    uint32 row_w;
-    uint32 pixel_n_bytes;
-  } extra_info;
+  InternalBitmap simple; //<- not part of spec
 } Bitmap;
+
+ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err);
+#include "pix.h"
+ERR_EXISTS writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err);
 
 #endif
 

@@ -22,9 +22,9 @@ ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char 
     else                            *query   = argv[i];
   }
 
-  if(!*infile)  ERROR(err,"%s\nNo input file specified.",  usage);
-  if(!*outfile) ERROR(err,"%s\nNo output file specified.", usage);
-  if(!*query)   ERROR(err,"%s\nNo query specified.",       usage);
+  if(!*infile)  ERROR("%s\nNo input file specified.",  usage);
+  if(!*outfile) ERROR("%s\nNo output file specified.", usage);
+  if(!*query)   ERROR("%s\nNo query specified.",       usage);
 
   return NO_ERR;
 }
