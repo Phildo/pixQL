@@ -55,12 +55,12 @@ ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
   Bitmap b = {0};
   readBitmap(infile, &b, err);
 
-  img->width  = b.dib_header.bitmap_info_header.width;
-  img->height = b.dib_header.bitmap_info_header.height;
+  img->width  = b.simple.width;
+  img->height = b.simple.height;
 
   img->data = calloc(img->width*img->height*sizeof(Pix),1);
 
-  dataToPix(b.pixel_array, b.dib_header.bitmap_info_header.bpp, b.simple.row_w, img, err);
+  dataToPix(b.pixel_array, b.simple.bpp, b.simple.row_w, img, err);
 
   return NO_ERR;
 }
