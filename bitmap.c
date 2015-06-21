@@ -6,7 +6,7 @@
 #include "pix.h"
 #include "str.h"
 
-#define READFIELD(field) ({ if(sizeof(field) != fread(&field, sizeof(byte), sizeof(field), fp)) sprintf(err->info, "Error reading field"); return ERR; })
+#define READFIELD(field) ({ if(sizeof(field) != fread(&field, sizeof(byte), sizeof(field), fp)) { sprintf(err->info, "Error reading field"); return ERR; } })
 
 static ERR_EXISTS readFileHeader(FILE *fp, BitmapFileHeader *bfh, PixErr *err)
 {
@@ -26,6 +26,7 @@ static ERR_EXISTS readDIBHeader(FILE *fp, DIBHeader *dh, PixErr *err)
 {
   READFIELD(dh->header_size);
   BITMAPINFOHEADER *ih = &dh->bitmap_info_header;
+  BITMAPV5HEADER *v5h = &dh->bitmap_v5_header;
   switch(dh->header_size)
   {
     case BITMAPINFOHEADER_SIZE:
@@ -37,7 +38,7 @@ static ERR_EXISTS readDIBHeader(FILE *fp, DIBHeader *dh, PixErr *err)
     case BITMAPV3INFOHEADER_SIZE:
     case BITMAPV4HEADER_SIZE:
     default:
-      ERROR("Unsupported DIB header\n");
+      ERROR("Unsupported DIB header (header size %d)\n",dh->header_size);
       break;
   }
   READFIELD(ih->width);
@@ -45,19 +46,20 @@ static ERR_EXISTS readDIBHeader(FILE *fp, DIBHeader *dh, PixErr *err)
   READFIELD(ih->nplanes);
   READFIELD(ih->bpp);
   READFIELD(ih->compression);
-  if(ih->compression != 0) ERROR("Unable to process compressed bitmaps");
+  if(!(ih->compression == 0 || ih->compression == 3)) ERROR("Unable to process compressed bitmaps");
   READFIELD(ih->image_size);
-  if(ih->image_size != 0) ERROR("Unable to process compressed bitmaps");
+  if(!(ih->image_size == 0 || ih->image_size >= ih->width*ih->height*(ih->bpp/8))) ERROR("Unable to process compressed bitmaps");
   READFIELD(ih->horiz_resolution);
   READFIELD(ih->vert_resolution);
   READFIELD(ih->ncolors);
+  if(ih->ncolors != 0) ERROR("Unable to process indexed bitmaps");
   READFIELD(ih->nimportantcolors);
 
-  return NO_ERR;
-}
+  READFIELD(v5h->bV5RedMask);
+  READFIELD(v5h->bV5GreenMask);
+  READFIELD(v5h->bV5BlueMask);
+  READFIELD(v5h->bV5AlphaMask);
 
-static ERR_EXISTS readExtraBitMasks(FILE *fp, byte *b, PixErr *err)
-{
   return NO_ERR;
 }
 
@@ -103,13 +105,19 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
   simple->row_w = ((simple->bpp*simple->width+31)/32)*4;
   simple->pixel_n_bytes = simple->row_w*simple->height;
   simple->offset_to_data = bh->offset;
+  simple->r_mask = dh->bitmap_v5_header.bV5RedMask;
+  simple->g_mask = dh->bitmap_v5_header.bV5GreenMask;
+  simple->b_mask = dh->bitmap_v5_header.bV5BlueMask;
+  simple->a_mask = dh->bitmap_v5_header.bV5AlphaMask;
 
-  byte *ebm = b->extra_bit_masks;
-  if(!readExtraBitMasks(in, ebm, err)) { fclose(in); return ERR; }
+  if(dh->bitmap_info_header.ncolors > 0)
+  {
+    fclose(in); ERROR("Unable to process indexed bitmaps- shouldn't have gotten here");
+    byte *ct = b->color_table;
+    if(!readColorTable(in, ct, 0, err)) { fclose(in); return ERR; }
+  }
 
-  byte *ct = b->color_table;
-  if(!readColorTable(in, ct, 0, err)) { fclose(in); return ERR; }
-
+  //does nothing...
   byte *g = b->gap1;
   if(!readGap(in, g, 0, err)) { fclose(in); return ERR; }
 
@@ -118,9 +126,11 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
   byte *pa = b->pixel_array;
   if(!readPixelArray(in, pa, simple->pixel_n_bytes, err)) { fclose(in); return ERR; }
 
+  //does nothing...
   g = b->gap2;
   if(!readGap(in, g, 0, err)) { fclose(in); return ERR; }
 
+  //does nothing...
   byte *cp = b->icc_color_profile;
   if(!readColorProfile(in, cp, 0, err)) { fclose(in); return ERR; }
 
@@ -209,5 +219,96 @@ ERR_EXISTS writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img
   return NO_ERR;
 */
 return NO_ERR;
+}
+
+static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
+{
+  byte *data = b->pixel_array;
+  int roww = b->simple.row_w;
+
+  switch(b->simple.bpp)
+  {
+    case 32:
+      if(!(
+        b->simple.r_mask == 0xff000000 &&
+        b->simple.g_mask == 0x00ff0000 &&
+        b->simple.b_mask == 0x0000ff00 &&
+        b->simple.a_mask == 0x00000000
+        ))
+        ERROR("Error parsing weird bit masks");
+
+      for(int i = 0; i < img->height; i++)
+      {
+        for(int j = 0; j < img->width; j++)
+        {
+          img->data[(i*img->width)+j].a = data[(i*roww)+(j*4)+0];
+          img->data[(i*img->width)+j].b = data[(i*roww)+(j*4)+1];
+          img->data[(i*img->width)+j].g = data[(i*roww)+(j*4)+2];
+          img->data[(i*img->width)+j].r = data[(i*roww)+(j*4)+3];
+        }
+      }
+    break;
+    case 24:
+      if(!(
+        b->simple.r_mask == 0xff000000 &&
+        b->simple.g_mask == 0x00ff0000 &&
+        b->simple.b_mask == 0x0000ff00 &&
+        b->simple.a_mask == 0x00000000
+        ))
+        ERROR("Error parsing weird bit masks");
+
+      for(int i = 0; i < img->height; i++)
+      {
+        for(int j = 0; j < img->width; j++)
+        {
+          img->data[(i*img->width)+j].a = 0;
+          img->data[(i*img->width)+j].b = data[(i*roww)+(j*4)+1];
+          img->data[(i*img->width)+j].g = data[(i*roww)+(j*4)+2];
+          img->data[(i*img->width)+j].r = data[(i*roww)+(j*4)+3];
+        }
+      }
+    break;
+    default:
+      ERROR("Error parsing unsupported bpp");
+      break;
+  }
+  return NO_ERR;
+}
+
+static ERR_EXISTS pixToData(PixImg *img, int bpp, int roww, byte *data, PixErr *err)
+{
+  switch(bpp)
+  {
+    case 32:
+      for(int i = 0; i < img->height; i++)
+      {
+        for(int j = 0; j < img->width; j++)
+        {
+          data[(i*roww)+(j*4)+0] = img->data[(i*img->width)+j].a;
+          data[(i*roww)+(j*4)+1] = img->data[(i*img->width)+j].b;
+          data[(i*roww)+(j*4)+2] = img->data[(i*img->width)+j].g;
+          data[(i*roww)+(j*4)+3] = img->data[(i*img->width)+j].r;
+        }
+      }
+    break;
+    default:
+      //ERROR(1,"Invaid BPP");
+      break;
+  }
+  return NO_ERR;
+}
+
+ERR_EXISTS bitmapToImage(Bitmap *b, PixImg *img, PixErr *err)
+{
+  img->width  = b->simple.width;
+  img->height = b->simple.height;
+  img->data = calloc(img->width*img->height*sizeof(Pix),1);
+  if(!dataToPix(b, img, err)) return ERR;
+  return NO_ERR;
+}
+
+ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
+{
+  return NO_ERR;
 }
 

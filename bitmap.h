@@ -4,6 +4,8 @@
 #include "dotypes.h"
 #include "err.h"
 
+#include "pix.h"
+
 /* spec from http://en.wikipedia.org/wiki/BMP_file_format */
 typedef struct
 {
@@ -99,8 +101,6 @@ typedef union DIBHeader
   BITMAPV5HEADER bitmap_v5_header;
 } DIBHeader;
 
-enum { EXTRA_BIT_MASKS_SIZE = 14 };
-
 //internal rep of bitmap
 //non-standardized struct
 //don't have to wade through versions to access data
@@ -112,6 +112,10 @@ typedef struct
   uint32 row_w;
   uint32 pixel_n_bytes;
   uint32 offset_to_data;
+  uint32 r_mask;
+  uint32 g_mask;
+  uint32 b_mask;
+  uint32 a_mask;
 } InternalBitmap;
 
 typedef struct
@@ -119,7 +123,6 @@ typedef struct
   long zero_pad;
   BitmapFileHeader bitmap_file_header;
   DIBHeader dib_header;
-  byte extra_bit_masks[EXTRA_BIT_MASKS_SIZE];
   byte *color_table;
   byte *gap1;
   byte *pixel_array;
@@ -129,8 +132,10 @@ typedef struct
 } Bitmap;
 
 ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err);
-#include "pix.h"
 ERR_EXISTS writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err);
+
+ERR_EXISTS bitmapToImage(Bitmap *b, PixImg *img, PixErr *err);
+ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err);
 
 #endif
 

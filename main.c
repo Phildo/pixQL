@@ -37,22 +37,22 @@ int main(int argc, char **argv)
   char *outfile_str = 0;
   char *query_str = 0;
   if(!parseArgs(argc, argv, &infile_str, &outfile_str, &query_str, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  { fprintf(stderr,"%s\n",err.info); return 1; }
 
   Query query = {0};
   if(!parseQuery(query_str, &query, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  { fprintf(stderr,"%s\n",err.info); return 1; }
 
   PixImg in_img = {0};
   if(!readFile(infile_str, &in_img, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  { fprintf(stderr,"%s\n",err.info); return 1; }
 
   PixImg out_img = {0};
   if(!executeQuery(&query, &in_img, &out_img, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  { fprintf(stderr,"%s\n",err.info); return 1; }
 
   if(!writeFile(outfile_str, infile_str, &out_img, &err))
-  { fprintf(stderr,"%s",err.info); return 1; }
+  { fprintf(stderr,"%s\n",err.info); return 1; }
 
   //to please valgrind
   freeQuery(&query);
