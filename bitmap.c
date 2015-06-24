@@ -139,86 +139,61 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
   return NO_ERR;
 }
 
-ERR_EXISTS writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err)
+ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err)
 {
-/*
   FILE *out;
-  if(!(out = fopen(outfile, "w"))) return;//ERROR(1,"Can't open output file- %s",outfile);
-  FILE *in; //THIS IS DUMB
-  if(!(in = fopen(bmptemplate, "r"))) return;//ERROR(1,"Can't open input file- %s",bmptemplate);
+  FILE *fp;
+  if(!(out = fopen(outfile, "w"))) ERROR("Can't open output file- %s",outfile);
+  fp = out;
 
+  #define WRITEFIELD(field) ({ if(sizeof(field) != fwrite(&field, sizeof(byte), sizeof(field), fp)) { fclose(out); return ERR; }  })
 
+  BitmapFileHeader *h = &b->bitmap_file_header;
+  WRITEFIELD(h->header_field);
+  WRITEFIELD(h->size);
+  WRITEFIELD(h->reserved_a);
+  WRITEFIELD(h->reserved_b);
+  WRITEFIELD(h->offset);
 
+  DIBHeader *dh = &b->dib_header;
+  BITMAPV5HEADER *v5h = &dh->bitmap_v5_header;
+  WRITEFIELD(v5h->bV5Size);
+  WRITEFIELD(v5h->bV5Width);
+  WRITEFIELD(v5h->bV5Height);
+  WRITEFIELD(v5h->bV5Planes);
+  WRITEFIELD(v5h->bV5BitCount);
+  WRITEFIELD(v5h->bV5Compression);
+  WRITEFIELD(v5h->bV5SizeImage);
+  WRITEFIELD(v5h->bV5XPelsPerMeter);
+  WRITEFIELD(v5h->bV5YPelsPerMeter);
+  WRITEFIELD(v5h->bV5ClrUsed);
+  WRITEFIELD(v5h->bV5ClrImportant);
+  WRITEFIELD(v5h->bV5RedMask);
+  WRITEFIELD(v5h->bV5GreenMask);
+  WRITEFIELD(v5h->bV5BlueMask);
+  WRITEFIELD(v5h->bV5AlphaMask);
+  WRITEFIELD(v5h->bV5CSType);
+  WRITEFIELD(v5h->RciexyzX);
+  WRITEFIELD(v5h->RciexyzY);
+  WRITEFIELD(v5h->RciexyzZ);
+  WRITEFIELD(v5h->GciexyzX);
+  WRITEFIELD(v5h->GciexyzY);
+  WRITEFIELD(v5h->GciexyzZ);
+  WRITEFIELD(v5h->BciexyzX);
+  WRITEFIELD(v5h->BciexyzY);
+  WRITEFIELD(v5h->BciexyzZ);
+  WRITEFIELD(v5h->bV5GammaRed);
+  WRITEFIELD(v5h->bV5GammaGreen);
+  WRITEFIELD(v5h->bV5GammaBlue);
+  WRITEFIELD(v5h->bV5Intent);
+  WRITEFIELD(v5h->bV5ProfileData);
+  WRITEFIELD(v5h->bV5ProfileSize);
+  WRITEFIELD(v5h->bV5Reserved);
 
+  fwrite(b->pixel_array, sizeof(byte), b->simple.width*b->simple.height*4, out);
 
-
-
-  Bitmap b = {0};
-
-  BitmapFileHeader *bh = &b.bitmap_file_header;
-  DIBHeader *dh = &b.dib_header;
-  BITMAPINFOHEADER *ih;
-
-  //bitmap_header
-  #define READFIELD(field,fp) if(sizeof(field) != fread(&field, sizeof(byte), sizeof(field), fp)) return;//ERROR(1,"%s",invalid);
-
-  //read header_field
-  READFIELD(bh->header_field,in);
-  READFIELD(bh->size,in);
-  READFIELD(bh->reserved_a,in);
-  READFIELD(bh->reserved_b,in);
-  READFIELD(bh->offset,in);
-
-  //read dib_header
-  READFIELD(dh->header_size,in);
-  ih = 0;
-  switch(dh->header_size)
-  {
-    case BITMAPINFOHEADER_SIZE:
-      ih = &dh->bitmap_info_header;
-    case BITMAPV5HEADER_SIZE:
-      ih = (BITMAPINFOHEADER *)&dh->bitmap_v5_header;
-      break;
-    case BITMAPCOREHEADER_SIZE:
-    case OS22XBITMAPHEADER_SIZE:
-    case BITMAPV2INFOHEADER_SIZE:
-    case BITMAPV3INFOHEADER_SIZE:
-    case BITMAPV4HEADER_SIZE:
-    default:
-      //ERROR(1,"Unsupported DIB header\n");
-      break;
-  }
-  READFIELD(ih->width,in);
-  READFIELD(ih->height,in);
-  READFIELD(ih->nplanes,in);
-  READFIELD(ih->bpp,in);
-
-  fseek(in, bh->offset, SEEK_SET);
-  b.extra_info.row_w = ((ih->bpp*ih->width+31)/32)*4;
-  b.extra_info.pixel_n_bytes = b.extra_info.row_w*ih->height;
-  b.pixel_array = calloc(b.extra_info.pixel_n_bytes,1);
-  if(b.extra_info.pixel_n_bytes != fread(b.pixel_array, sizeof(byte), b.extra_info.pixel_n_bytes, in)) return;//ERROR(1,"%s",invalid);
-
-
-
-
-
-
-  byte *indata = calloc(b.bitmap_file_header.size,1);
-  fseek(in, 0, SEEK_SET);
-  fread( indata, sizeof(byte), b.bitmap_file_header.size, in);
-  fwrite(indata, sizeof(byte), b.bitmap_file_header.size, out);
-  fseek(out, b.bitmap_file_header.offset, SEEK_SET);
-
-  //pixToData(img, b.dib_header.bitmap_info_header.bpp, b.extra_info.row_w, b.pixel_array, err);
-
-  fwrite(b.pixel_array, sizeof(byte), b.extra_info.pixel_n_bytes, out);
-
-  fclose(in);
   fclose(out);
   return NO_ERR;
-*/
-return NO_ERR;
 }
 
 static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
@@ -275,9 +250,12 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
   return NO_ERR;
 }
 
-static ERR_EXISTS pixToData(PixImg *img, int bpp, int roww, byte *data, PixErr *err)
+static ERR_EXISTS pixToData(PixImg *img, Bitmap *b, PixErr *err)
 {
-  switch(bpp)
+  byte *data = b->pixel_array;
+  int roww = b->simple.row_w;
+
+  switch(b->simple.bpp)
   {
     case 32:
       for(int i = 0; i < img->height; i++)
@@ -292,7 +270,7 @@ static ERR_EXISTS pixToData(PixImg *img, int bpp, int roww, byte *data, PixErr *
       }
     break;
     default:
-      //ERROR(1,"Invaid BPP");
+      ERROR("Malformed internal bitmap");
       break;
   }
   return NO_ERR;
@@ -309,6 +287,37 @@ ERR_EXISTS bitmapToImage(Bitmap *b, PixImg *img, PixErr *err)
 
 ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
 {
+  int headersize = 2+4+2+2+4;
+  int dibsize = BITMAPV5HEADER_SIZE;
+  int datasize = img->width*img->height*4;;
+
+  BitmapFileHeader *h = &b->bitmap_file_header;
+  h->header_field[0] = 'B';
+  h->header_field[1] = 'M';
+  h->size = headersize+dibsize+datasize;
+  h->offset = headersize+dibsize;
+
+  DIBHeader *dh = &b->dib_header;
+  BITMAPV5HEADER *v5h = &dh->bitmap_v5_header;
+  v5h->bV5Size = BITMAPV5HEADER_SIZE;
+  v5h->bV5Width = img->width;
+  v5h->bV5Height = img->height;
+  v5h->bV5Planes = 0;
+  v5h->bV5BitCount = 32;
+  v5h->bV5Compression = 0;
+  v5h->bV5SizeImage = 0;
+  v5h->bV5XPelsPerMeter = 360;
+  v5h->bV5YPelsPerMeter = 360;
+  v5h->bV5ClrUsed = 0;
+  v5h->bV5ClrImportant = 0;
+  v5h->bV5RedMask   = 0xff000000;
+  v5h->bV5GreenMask = 0x00ff0000;
+  v5h->bV5BlueMask  = 0x0000ff00;
+  v5h->bV5AlphaMask = 0x00000000;
+
+  b->pixel_array = calloc(datasize,1);
+  if(!pixToData(img, b, err)) return ERR;
+
   return NO_ERR;
 }
 

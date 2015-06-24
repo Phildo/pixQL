@@ -132,7 +132,7 @@ typedef struct
 } Bitmap;
 
 ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err);
-ERR_EXISTS writeBitmap(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err);
+ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err);
 
 ERR_EXISTS bitmapToImage(Bitmap *b, PixImg *img, PixErr *err);
 ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err);

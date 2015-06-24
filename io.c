@@ -13,9 +13,11 @@ ERR_EXISTS readFile(const char *infile, PixImg *img, PixErr *err)
   return NO_ERR;
 }
 
-ERR_EXISTS writeFile(const char *outfile, const char *bmptemplate, PixImg *img, PixErr *err)
+ERR_EXISTS writeFile(const char *outfile, PixImg *img, PixErr *err)
 {
-  writeBitmap(outfile, bmptemplate, img, err);
+  Bitmap b = {0};
+  if(!imageToBitmap(img, &b, err)) return ERR;
+  if(!writeBitmap(outfile, &b, err)) return ERR;
 
   return NO_ERR;
 }

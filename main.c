@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   if(!executeQuery(&query, &in_img, &out_img, &err))
   { fprintf(stderr,"%s\n",err.info); return 1; }
 
-  if(!writeFile(outfile_str, infile_str, &out_img, &err))
+  if(!writeFile(outfile_str, &out_img, &err))
   { fprintf(stderr,"%s\n",err.info); return 1; }
 
   //to please valgrind
