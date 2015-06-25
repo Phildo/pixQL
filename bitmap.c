@@ -208,7 +208,7 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         b->simple.r_mask == 0xff000000 &&
         b->simple.g_mask == 0x00ff0000 &&
         b->simple.b_mask == 0x0000ff00 &&
-        b->simple.a_mask == 0x00000000
+        b->simple.a_mask == 0x000000ff
         ))
         ERROR("Error parsing weird bit masks");
 
@@ -228,7 +228,7 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         b->simple.r_mask == 0xff000000 &&
         b->simple.g_mask == 0x00ff0000 &&
         b->simple.b_mask == 0x0000ff00 &&
-        b->simple.a_mask == 0x00000000
+        b->simple.a_mask == 0x000000ff
         ))
         ERROR("Error parsing weird bit masks");
 
@@ -302,7 +302,7 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   v5h->bV5Size = BITMAPV5HEADER_SIZE;
   v5h->bV5Width = img->width;
   v5h->bV5Height = img->height;
-  v5h->bV5Planes = 0;
+  v5h->bV5Planes = 1;
   v5h->bV5BitCount = 32;
   v5h->bV5Compression = 0;
   v5h->bV5SizeImage = 0;
@@ -313,7 +313,21 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   v5h->bV5RedMask   = 0xff000000;
   v5h->bV5GreenMask = 0x00ff0000;
   v5h->bV5BlueMask  = 0x0000ff00;
-  v5h->bV5AlphaMask = 0x00000000;
+  v5h->bV5AlphaMask = 0x000000ff;
+
+  InternalBitmap *simple = &b->simple;
+  simple->width = v5h->bV5Width;
+  simple->height = v5h->bV5Height;
+  simple->bpp = v5h->bV5BitCount;
+  simple->row_w = ((simple->bpp*simple->width+31)/32)*4;
+  simple->pixel_n_bytes = simple->row_w*simple->height;
+  simple->offset_to_data = h->offset;
+  simple->r_mask = v5h->bV5RedMask;
+  simple->g_mask = v5h->bV5GreenMask;
+  simple->b_mask = v5h->bV5BlueMask;
+  simple->a_mask = v5h->bV5AlphaMask;
+
+
 
   b->pixel_array = calloc(datasize,1);
   if(!pixToData(img, b, err)) return ERR;
