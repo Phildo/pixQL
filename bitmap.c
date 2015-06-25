@@ -172,6 +172,7 @@ ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err)
   WRITEFIELD(v5h->bV5GreenMask);
   WRITEFIELD(v5h->bV5BlueMask);
   WRITEFIELD(v5h->bV5AlphaMask);
+  v5h->bV5CSType = 0x73524742; //i have no idea what is going on here
   WRITEFIELD(v5h->bV5CSType);
   WRITEFIELD(v5h->RciexyzX);
   WRITEFIELD(v5h->RciexyzY);
@@ -185,6 +186,7 @@ ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err)
   WRITEFIELD(v5h->bV5GammaRed);
   WRITEFIELD(v5h->bV5GammaGreen);
   WRITEFIELD(v5h->bV5GammaBlue);
+  v5h->bV5Intent = 2; //i have no idea what is going on here.
   WRITEFIELD(v5h->bV5Intent);
   WRITEFIELD(v5h->bV5ProfileData);
   WRITEFIELD(v5h->bV5ProfileSize);
@@ -208,7 +210,10 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         b->simple.r_mask == 0xff000000 &&
         b->simple.g_mask == 0x00ff0000 &&
         b->simple.b_mask == 0x0000ff00 &&
-        b->simple.a_mask == 0x000000ff
+          (
+            b->simple.a_mask == 0x000000ff ||
+            b->simple.a_mask == 0x00000000
+          )
         ))
         ERROR("Error parsing weird bit masks");
 
@@ -228,7 +233,7 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         b->simple.r_mask == 0xff000000 &&
         b->simple.g_mask == 0x00ff0000 &&
         b->simple.b_mask == 0x0000ff00 &&
-        b->simple.a_mask == 0x000000ff
+        b->simple.a_mask == 0x00000000
         ))
         ERROR("Error parsing weird bit masks");
 
@@ -304,7 +309,7 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   v5h->bV5Height = img->height;
   v5h->bV5Planes = 1;
   v5h->bV5BitCount = 32;
-  v5h->bV5Compression = 0;
+  v5h->bV5Compression = 3;
   v5h->bV5SizeImage = 0;
   v5h->bV5XPelsPerMeter = 360;
   v5h->bV5YPelsPerMeter = 360;
