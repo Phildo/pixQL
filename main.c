@@ -13,7 +13,7 @@
 const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
 const char *invalid = "Invalid file- file does not conform to bitmap spec";
 
-ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char **query, PixErr *err)
+ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char **queryfile, char **query, PixErr *err)
 {
   for(int i = 0; i < argc; i++)
   {
@@ -24,7 +24,8 @@ ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char 
 
   if(!*infile)  ERROR("%s\nNo input file specified.",  usage);
   if(!*outfile) ERROR("%s\nNo output file specified.", usage);
-  if(!*query)   ERROR("%s\nNo query specified.",       usage);
+  if(!*queryfile && !*query)
+                ERROR("%s\nNo query specified.",       usage);
 
   return NO_ERR;
 }
@@ -35,8 +36,9 @@ int main(int argc, char **argv)
 
   char *infile_str = 0;
   char *outfile_str = 0;
+  char *queryfile_str = 0;
   char *query_str = 0;
-  if(!parseArgs(argc, argv, &infile_str, &outfile_str, &query_str, &err))
+  if(!parseArgs(argc, argv, &infile_str, &outfile_str, &queryfile_str, &query_str, &err))
   { fprintf(stderr,"%s\n",err.info); return 1; }
 
   Query query = {0};
