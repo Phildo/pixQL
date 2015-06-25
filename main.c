@@ -15,17 +15,27 @@ const char *invalid = "Invalid file- file does not conform to bitmap spec";
 
 ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char **queryfile, char **query, PixErr *err)
 {
-  for(int i = 0; i < argc; i++)
+  for(int i = 1; i < argc; i++)
   {
-         if(cmp(argv[i],"-i") == 0) *infile  = argv[++i];
-    else if(cmp(argv[i],"-o") == 0) *outfile = argv[++i];
-    else                            *query   = argv[i];
+         if(cmp(argv[i],"-i")  == 0) *infile    = argv[++i];
+    else if(cmp(argv[i],"-o")  == 0) *outfile   = argv[++i];
+    else if(cmp(argv[i],"-qf") == 0) *queryfile = argv[++i];
+    else if(cmp(argv[i],"-q")  == 0) *query     = argv[++i];
+    else                             *query     = argv[i];
   }
 
-  if(!*infile)  ERROR("%s\nNo input file specified.",  usage);
-  if(!*outfile) ERROR("%s\nNo output file specified.", usage);
-  if(!*queryfile && !*query)
-                ERROR("%s\nNo query specified.",       usage);
+  if(!*infile)               ERROR("%s\nNo input file specified.",  usage);
+  if(!*outfile)              ERROR("%s\nNo output file specified.", usage);
+  if(!*queryfile && !*query) ERROR("%s\nNo query specified.",       usage);
+
+  if(*queryfile && !*query)
+  {
+    int max_len = 2048;
+    *query = malloc(max_len);
+    FILE *qf;
+    if(!(qf = fopen(*queryfile, "r"))) ERROR("Can't open query file- %s",*queryfile);
+    if(!fread(*query, sizeof(byte), max_len, qf)) ERROR("Can't read query file");
+  }
 
   return NO_ERR;
 }

@@ -177,9 +177,19 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
   if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
   if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
+  int v;
   switch(lval->type)
   {
-    case QUERY_MEMBER_TYPE_COLOR: pixAt(out,pcol,prow)->r = val; break; //actually use color
+    case QUERY_MEMBER_TYPE_COLOR:
+      v = (val & 0xff000000) >> 24;
+      pixAt(out,pcol,prow)->r = v;
+      v = (val & 0x00ff0000) >> 16;
+      pixAt(out,pcol,prow)->g = v;
+      v = (val & 0x0000ff00) >> 8;
+      pixAt(out,pcol,prow)->b = v;
+      v = (val & 0x000000ff) >> 0;
+      pixAt(out,pcol,prow)->a = v;
+      break;
     case QUERY_MEMBER_TYPE_R: pixAt(out,pcol,prow)->r = val; break;
     case QUERY_MEMBER_TYPE_G: pixAt(out,pcol,prow)->g = val; break;
     case QUERY_MEMBER_TYPE_B: pixAt(out,pcol,prow)->b = val; break;

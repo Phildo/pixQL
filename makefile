@@ -39,6 +39,9 @@ debug: $(OUTFILE).dSYM
 debugargs: $(OUTFILE).dSYM
 	$(DEBUGGER) --args ./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q $(SAMPLE_QUERY)
 
+debugargsfile: $(OUTFILE).dSYM
+	$(DEBUGGER) --args ./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -qf info.txt
+
 TEST_OUTFILE=pixql_test
 TEST_HEADERS:=$(ALL_HEADERS)
 TEST_SOURCES:=$(filter-out %/main.c, $(ALL_SOURCES))
