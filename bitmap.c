@@ -105,6 +105,7 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
   simple->row_w = ((simple->bpp*simple->width+31)/32)*4;
   simple->pixel_n_bytes = simple->row_w*simple->height;
   simple->offset_to_data = bh->offset;
+  simple->compression = dh->bitmap_v5_header.bV5Compression;
   simple->r_mask = dh->bitmap_v5_header.bV5RedMask;
   simple->g_mask = dh->bitmap_v5_header.bV5GreenMask;
   simple->b_mask = dh->bitmap_v5_header.bV5BlueMask;
@@ -206,15 +207,17 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
   switch(b->simple.bpp)
   {
     case 32:
-      if(!(
-        b->simple.r_mask == 0xff000000 &&
-        b->simple.g_mask == 0x00ff0000 &&
-        b->simple.b_mask == 0x0000ff00 &&
-          (
-            b->simple.a_mask == 0x000000ff ||
-            b->simple.a_mask == 0x00000000
+      if(b->simple.compression == 3 &&
+          !(
+          b->simple.r_mask == 0xff000000 &&
+          b->simple.g_mask == 0x00ff0000 &&
+          b->simple.b_mask == 0x0000ff00 &&
+            (
+              b->simple.a_mask == 0x000000ff ||
+              b->simple.a_mask == 0x00000000
+            )
           )
-        ))
+        )
         ERROR("Error parsing weird bit masks");
 
       for(int i = 0; i < img->height; i++)
@@ -229,19 +232,21 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
       }
     break;
     case 24:
-      if(!(
-        b->simple.r_mask == 0xff000000 &&
-        b->simple.g_mask == 0x00ff0000 &&
-        b->simple.b_mask == 0x0000ff00 &&
-        b->simple.a_mask == 0x00000000
-        ))
+      if(b->simple.compression == 3 &&
+          !(
+          b->simple.r_mask == 0xff000000 &&
+          b->simple.g_mask == 0x00ff0000 &&
+          b->simple.b_mask == 0x0000ff00 &&
+          b->simple.a_mask == 0x00000000
+          )
+        )
         ERROR("Error parsing weird bit masks");
 
       for(int i = 0; i < img->height; i++)
       {
         for(int j = 0; j < img->width; j++)
         {
-          img->data[(i*img->width)+j].a = 0;
+          img->data[(i*img->width)+j].a = 255;
           img->data[(i*img->width)+j].b = data[(i*roww)+(j*4)+1];
           img->data[(i*img->width)+j].g = data[(i*roww)+(j*4)+2];
           img->data[(i*img->width)+j].r = data[(i*roww)+(j*4)+3];
@@ -327,6 +332,7 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   simple->row_w = ((simple->bpp*simple->width+31)/32)*4;
   simple->pixel_n_bytes = simple->row_w*simple->height;
   simple->offset_to_data = h->offset;
+  simple->compression = v5h->bV5Compression;
   simple->r_mask = v5h->bV5RedMask;
   simple->g_mask = v5h->bV5GreenMask;
   simple->b_mask = v5h->bV5BlueMask;

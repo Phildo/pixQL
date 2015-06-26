@@ -112,6 +112,7 @@ typedef struct
   uint32 row_w;
   uint32 pixel_n_bytes;
   uint32 offset_to_data;
+  uint8  compression;
   uint32 r_mask;
   uint32 g_mask;
   uint32 b_mask;
