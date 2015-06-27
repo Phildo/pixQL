@@ -12,14 +12,6 @@ That said, any bug reports, compatibility gaps, suggestions, etc... are welcome!
 ##overview
 The general idea is that you can supply an input image, and define a subset of pixels that you'd like to "select" (example: "give me all the pixels on the left half of the image"). You can then specify an operation you'd like to be applied on each of those pixels ("invert the pixels"). Using a series of selections and operations, you can perform coplex image manipulations.
 
-A concrete example might be "select all the pixels that fall on a 10x10 grid throughout the image" and "set those pixels to white". This will simply create a grid on your image.
-
-Because the 'rules' are simple (define some selection to be applied to each pixel to determine if it's selected, then do some specific operation on each of those selected pixels), the approach to solving a problem is very different than that of using a traditional editor.
-
-For example, if I want to clear all non-black pixels from an image, I can reason about breaking down that problem into it's rigid parts ("ok, by 'non-black' I mean where the color != #000000FF, and by 'clear it' I mean set the color to #00000000"). But in photoshop, I instead am relying on the problem being solved externally ("ok, how can I find the right menu that deals with this kind of operation? what's the word the designers of photoshop used to describe this... I hope if I google it in plain text it might link to a forum post or something of someone with the same problem?").
-
-A full understanding of photoshop would yield an easier time, for sure. But gaining a "full understanding of photoshop" is much more difficult and time consuming (due to its size and complexity) than a "full understanding" of the two or three simple rules behind pixQL. (also, pixQL is free and open source :P)
-
 ##installation
 ```
 # note- currently only tested on OSX Yosemite. In theory, should work on most *nix style stuff...
@@ -122,6 +114,15 @@ If target left out, assumed to be IN (EXCEPT in the case of the lvalue of an OPE
 - `COL` - pixel's column (0 - (WIDTH-1), 0 is left)
 - `WIDTH` - target's width
 - `HEIGHT` - target's height
+
+## but why tho
+A concrete example of pixQL's use might be "select all the pixels that fall on a 10x10 grid throughout the image" and "set those pixels to white". This will simply create a grid on your image.
+
+Because the 'rules' are simple (define some selection to be applied to each pixel to determine if it's selected, then do some specific operation on each of those selected pixels), the approach to solving a problem is very different than that of using a traditional editor.
+
+For example, if I want to clear all non-black pixels from an image, I can reason about breaking down that problem into it's rigid parts ("ok, by 'non-black' I mean where the color != #000000FF, and by 'clear it' I mean set the color to #00000000"). But in photoshop, I instead am relying on the problem being solved externally ("ok, how can I find the right menu that deals with this kind of operation? what's the word the designers of photoshop used to describe this... I hope if I google it in plain text it might link to a forum post or something of someone with the same problem?").
+
+A full understanding of photoshop would yield an easier time, for sure. But gaining a "full understanding of photoshop" is much more difficult and time consuming (due to its size and complexity) than a "full understanding" of the two or three simple rules behind pixQL. (also, pixQL is free and open source :P)
 
 ## the future
 - Alter syntax to allow for terser `OPERATE` chains. For example, to invert a pixel currently requires `OPERATE SET R = 255-R; OPERATE SET G = 255-G; OPERATE B = 255-B;` which is ridiculous. Should be able to do something like `OPERATE SET R=255-R,G=255-G,B=255-B;`.
