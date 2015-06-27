@@ -247,9 +247,9 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         for(int j = 0; j < img->width; j++)
         {
           img->data[(i*img->width)+j].a = 255;
-          img->data[(i*img->width)+j].b = data[(i*roww)+(j*4)+1];
-          img->data[(i*img->width)+j].g = data[(i*roww)+(j*4)+2];
-          img->data[(i*img->width)+j].r = data[(i*roww)+(j*4)+3];
+          img->data[(i*img->width)+j].b = data[(i*roww)+(j*3)+0];
+          img->data[(i*img->width)+j].g = data[(i*roww)+(j*3)+1];
+          img->data[(i*img->width)+j].r = data[(i*roww)+(j*3)+2];
         }
       }
     break;

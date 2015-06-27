@@ -21,6 +21,8 @@ SAMPLE_QUERY = "SELECT WHERE COL > 2; OPERATE SET G = 255;"
 SAMPLE_QUERY = "COPY; SELECT WHERE COL > 1; OPERATE SET B = 255;"
 SAMPLE_QUERY = "OPERATE SET G = G;"
 
+SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/new.bmp -q "OPERATE SET G = G;"
+
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)
 
@@ -35,6 +37,9 @@ $(OUTFILE).dSYM: $(HEADERS) $(SOURCES)
 
 debug: $(OUTFILE).dSYM
 	$(DEBUGGER) $(OUTFILE)
+
+debugsetargs: $(OUTFILE).dSYM
+	$(DEBUGGER) --args ./$(OUTFILE) $(SAMPLE_ARGS)
 
 debugargs: $(OUTFILE).dSYM
 	$(DEBUGGER) --args ./$(OUTFILE) -i $(INPUT_FILE) -o $(OUTPUT_FILE) -q $(SAMPLE_QUERY)
