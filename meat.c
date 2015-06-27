@@ -207,8 +207,34 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   byte *selection_mask;
 
   QueryInit *init = &query->init;
-  out_img->width = evaluateExpression(&init->width,-1,-1,in_img,in_img,out_img,err);
-  out_img->height = evaluateExpression(&init->height,-1,-1,in_img,in_img,out_img,err);
+  uint32 init_width = evaluateExpression(&init->width,-1,-1,in_img,in_img,out_img,err);
+  uint32 init_height = evaluateExpression(&init->height,-1,-1,in_img,in_img,out_img,err);
+
+  if(!in_img->data)
+  {
+    uint32 color;
+    switch(init->type)
+    {
+      case QUERY_INIT_TYPE_COPY: ERROR("Target init type COPY, but no input file specified"); break;
+      case QUERY_INIT_TYPE_WHITE: color = 0xFFFFFFFF; break;
+      case QUERY_INIT_TYPE_BLACK: color = 0x000000FF; break;
+      case QUERY_INIT_TYPE_CLEAR: color = 0x00000000; break;
+      default: color = 0xFFFFFFFF; break;
+      /*
+        color = 0xFF0000FF;
+        color = 0x00FF00FF;
+        color = 0x0000FFFF;
+        color = 0x00FFFFFF;
+        color = 0xFF00FFFF;
+        color = 0xFFFF00FF;
+      */
+    }
+    if(!init_width || !init_height) ERROR("No input file nor init dimensions specified");
+    initImg(in_img, init_width, init_height, color);
+  }
+
+  out_img->width = init_width;
+  out_img->height = init_height;
   if(out_img->width  == 0) out_img->width = in_img->width;
   if(out_img->height == 0) out_img->height = in_img->height;
 
@@ -219,29 +245,29 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   {
     case QUERY_INIT_TYPE_COPY:
       {
-        for(int i = 0; i < in_img->height; i++)
-          for(int j = 0; j < in_img->width; j++)
+        for(int i = 0; i < out_img->height; i++)
+          for(int j = 0; j < out_img->width; j++)
             *pixAt(out_img,j,i) = *pixAt(in_img,j,i);
       }
       break;
     case QUERY_INIT_TYPE_CLEAR:
       {
-        for(int i = 0; i < in_img->height; i++)
-          for(int j = 0; j < in_img->width; j++)
+        for(int i = 0; i < out_img->height; i++)
+          for(int j = 0; j < out_img->width; j++)
             set(pixAt(out_img,j,i),0,0,0,0);
       }
       break;
     case QUERY_INIT_TYPE_WHITE:
       {
-        for(int i = 0; i < in_img->height; i++)
-          for(int j = 0; j < in_img->width; j++)
+        for(int i = 0; i < out_img->height; i++)
+          for(int j = 0; j < out_img->width; j++)
             set(pixAt(out_img,j,i),255,255,255,255);
       }
       break;
     case QUERY_INIT_TYPE_BLACK:
       {
-        for(int i = 0; i < in_img->height; i++)
-          for(int j = 0; j < in_img->width; j++)
+        for(int i = 0; i < out_img->height; i++)
+          for(int j = 0; j < out_img->width; j++)
             set(pixAt(out_img,j,i),0,0,0,255);
       }
       break;
@@ -277,10 +303,10 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
           break;
       }
 
-      for(int k = 0; k < in_img->height; k++)
-        for(int l = 0; l < in_img->width; l++)
+      for(int k = 0; k < out_img->height; k++)
+        for(int l = 0; l < out_img->width; l++)
           if(evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,err))
-            selection_mask[(k*in_img->width)+l] = 1;
+            selection_mask[(k*out_img->width)+l] = 1;
     }
 
     for(int j = 0; j < p->n_operations; j++)
@@ -297,9 +323,9 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
           break;
       }
 
-      for(int k = 0; k < in_img->height; k++)
-        for(int l = 0; l < in_img->width; l++)
-          if(selection_mask[(k*in_img->width)+l])
+      for(int k = 0; k < out_img->height; k++)
+        for(int l = 0; l < out_img->width; l++)
+          if(selection_mask[(k*out_img->width)+l])
             evaluateOperation(o,l,k,default_operating,in_img,out_img,err);
     }
   }

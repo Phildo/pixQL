@@ -22,6 +22,7 @@ SAMPLE_QUERY = "COPY; SELECT WHERE COL > 1; OPERATE SET B = 255;"
 SAMPLE_QUERY = "OPERATE SET G = G;"
 
 SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/new.bmp -q "OPERATE SET G = G;"
+SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/cage_out.bmp -q "COPY(100,20); SELECT WHERE ROW < 5; OPERATE SET G = 255;"
 
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(SOURCES) $(CFLAGS) $(LFLAGS) -o $(OUTFILE)

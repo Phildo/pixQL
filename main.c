@@ -24,8 +24,8 @@ ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char 
     else                             *query     = argv[i];
   }
 
-  if(!*infile)               ERROR("%s\nNo input file specified.",  usage);
-  if(!*outfile)              ERROR("%s\nNo output file specified.", usage);
+  //if(!*infile)               ERROR("%s\nNo input file specified.",  usage);
+  //if(!*outfile)              ERROR("%s\nNo output file specified.", usage);
   if(!*queryfile && !*query) ERROR("%s\nNo query specified.",       usage);
 
   if(*queryfile && !*query)
@@ -56,8 +56,11 @@ int main(int argc, char **argv)
   { fprintf(stderr,"%s\n",err.info); return 1; }
 
   PixImg in_img = {0};
-  if(!readFile(infile_str, &in_img, &err))
-  { fprintf(stderr,"%s\n",err.info); return 1; }
+  if(infile_str)
+  {
+    if(!readFile(infile_str, &in_img, &err))
+    { fprintf(stderr,"%s\n",err.info); return 1; }
+  }
 
   PixImg out_img = {0};
   if(!executeQuery(&query, &in_img, &out_img, &err))

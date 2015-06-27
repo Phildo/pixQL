@@ -20,6 +20,7 @@ typedef struct
 
 Pix *pixAt(PixImg *img, uint32 col, uint32 row);
 Pix *set(Pix *pix, byte r, byte g, byte b, byte a);
+PixImg *initImg(PixImg *img, uint32 width, uint32 height, uint32 color);
 
 #endif
 
