@@ -9,4 +9,5 @@ char toLower(char c);
 int cmp(char *a, char *b);
 int cmpLower(char *a, char *b);
 int intFromDec(char *s, int *d);
+int intFromHex(char *s, int *d);
 

@@ -338,8 +338,6 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   simple->b_mask = v5h->bV5BlueMask;
   simple->a_mask = v5h->bV5AlphaMask;
 
-
-
   b->pixel_array = calloc(datasize,1);
   if(!pixToData(img, b, err)) return ERR;
 

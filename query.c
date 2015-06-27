@@ -344,7 +344,9 @@ static int parseIntoConstant(char *q, int s, int e, QueryConstant *c, QueryError
   else if(teq("col")) c->type = QUERY_CONSTANT_TYPE_COL;
   else
   {
-    if(!intFromDec(token,&c->value)) QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing constant");
+         if(intFromDec(token,&c->value)) ;
+    else if(intFromHex(token,&c->value)) ;
+    else QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing constant");
     c->type = QUERY_CONSTANT_TYPE_NUMBER;
   }
   commit;

@@ -74,6 +74,26 @@ int intFromDec(char *s, int *d)
   }
   return 1;
 }
+int intFromHex(char *s, int *d)
+{
+  int i = 0;
+  *d = 0;
+
+  if(s[i] == '#') i++;
+  else if(s[i] == '0' && s[i+1] == 'x') i+=2;
+  else return 0;
+
+  while(s[i] != '\0')
+  {
+    *d *= 16;
+         if(s[i] >= 'a' && s[i] <= 'f') *d += 10+(s[i]-'a');
+    else if(s[i] >= 'A' && s[i] <= 'F') *d += 10+(s[i]-'A');
+    else if(s[i] >= '0' && s[i] <= '9') *d += s[i]-'0';
+    else return 0;
+    i++;
+  }
+  return 1;
+}
 
 #endif
 
