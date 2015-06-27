@@ -344,7 +344,15 @@ static int parseIntoConstant(char *q, int s, int e, QueryConstant *c, QueryError
   else if(teq("col")) c->type = QUERY_CONSTANT_TYPE_COL;
   else
   {
-         if(intFromDec(token,&c->value)) ;
+         if(teq("white"))   c->value = 0xFFFFFFFF;
+    else if(teq("black"))   c->value = 0x000000FF;
+    else if(teq("red"))     c->value = 0xFF0000FF;
+    else if(teq("green"))   c->value = 0x00FF00FF;
+    else if(teq("blue"))    c->value = 0x0000FFFF;
+    else if(teq("cyan"))    c->value = 0x00FFFFFF;
+    else if(teq("magenta")) c->value = 0xFF00FFFF;
+    else if(teq("yellow"))  c->value = 0xFFFF00FF;
+    else if(intFromDec(token,&c->value)) ;
     else if(intFromHex(token,&c->value)) ;
     else QERROR(QUERY_ERROR_TYPE_OPTIONAL,"Error parsing constant");
     c->type = QUERY_CONSTANT_TYPE_NUMBER;
