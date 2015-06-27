@@ -27,7 +27,7 @@ mv pixql /usr/local/bin/
 ##example simple usage
 ```
 # turn all red pixels green
-pixql -i in.bmp -o out.bmp -q "SELECT WHERE COLOR = #FF000000; OPERATE SET COLOR = #00FF0000;"
+pixql -i in.bmp -o out.bmp -q "SELECT WHERE COLOR = #FF0000FF; OPERATE SET COLOR = #00FF00FF;"
 
 # copy red channel into green channel
 pixql -i in.bmp -o out.bmp -q "OPERATE SET G = R;"
@@ -133,3 +133,14 @@ A full understanding of photoshop would yield an easier time, for sure. But gain
 - better hex parsing (so it would interpret `COLOR = #FFA920` as setting some color with 255 alpha rather than 0 red, FF green, A9 blue, and 20 alpha...)
 - array of TMP targets for intermediate computation within query
 - SELECTED as referencable attribute
+
+## bonus query
+Either copy this into a file and run with `-qf query_file.pql` or just copy and paste between quotes with `-q "..."`
+
+SELECT WHERE 1; OPERATE SET R = R/2; OPERATE SET G = G/2; OPERATE SET B = B/2;
+SELECT WHERE row >= HEIGHT/6*0 AND row < HEIGHT/6*1; OPERATE SET R = OUT.R+(255/2);
+SELECT WHERE row >= HEIGHT/6*1 AND row < HEIGHT/6*2; OPERATE SET R = OUT.R+(255/2); OPERATE SET G = OUT.G+(255/4);
+SELECT WHERE row >= HEIGHT/6*2 AND row < HEIGHT/6*3; OPERATE SET R = OUT.R+(255/2); OPERATE SET G = OUT.G+(255/2);
+SELECT WHERE row >= HEIGHT/6*3 AND row < HEIGHT/6*4; OPERATE SET G = OUT.G+(255/2);
+SELECT WHERE row >= HEIGHT/6*4 AND row < HEIGHT/6*5; OPERATE SET B = OUT.B+(255/2);
+SELECT WHERE row >= HEIGHT/6*5 AND row < HEIGHT/6*6; OPERATE SET R = OUT.R+(255/2); OPERATE SET B = OUT.B+(255/2);
