@@ -137,6 +137,7 @@ A full understanding of photoshop would yield an easier time, for sure. But gain
 ## bonus query
 Either copy this into a file and run with `-qf query_file.pql` or just copy and paste between quotes with `-q "..."`
 
+```
 SELECT WHERE 1; OPERATE SET R = R/2; OPERATE SET G = G/2; OPERATE SET B = B/2;
 SELECT WHERE row >= HEIGHT/6*0 AND row < HEIGHT/6*1; OPERATE SET R = OUT.R+(255/2);
 SELECT WHERE row >= HEIGHT/6*1 AND row < HEIGHT/6*2; OPERATE SET R = OUT.R+(255/2); OPERATE SET G = OUT.G+(255/4);
@@ -144,3 +145,4 @@ SELECT WHERE row >= HEIGHT/6*2 AND row < HEIGHT/6*3; OPERATE SET R = OUT.R+(255/
 SELECT WHERE row >= HEIGHT/6*3 AND row < HEIGHT/6*4; OPERATE SET G = OUT.G+(255/2);
 SELECT WHERE row >= HEIGHT/6*4 AND row < HEIGHT/6*5; OPERATE SET B = OUT.B+(255/2);
 SELECT WHERE row >= HEIGHT/6*5 AND row < HEIGHT/6*6; OPERATE SET R = OUT.R+(255/2); OPERATE SET B = OUT.B+(255/2);
+```
