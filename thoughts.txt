@@ -10,8 +10,6 @@ corrupts when -i == -o
 add asserts in query parsing
 KNOWN malloc BUG- -q = "SELECT WHERE COL = 3;"
 known memory leaks on query parse errors
-'BLANK' as init option (or 'BLACK', 'WHITE', 'CLEAR', 'RANDOM', etc...)
-NEW (no -i) actually works
 set colors as hex
   r = #FF
   r = 0xFF

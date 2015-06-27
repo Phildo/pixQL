@@ -4,3 +4,4 @@ pixQL_test
 .gdb_bps
 .gdb_history
 tags
+.DS_Store
