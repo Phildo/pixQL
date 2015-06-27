@@ -83,6 +83,9 @@ OPERATE SET COLOR = WHITE;
 
 ### expression
 A composition of pretty standard SQL-like sets of operations.
+
+`x` and `y` in the following examples are either constants, or `attribute`s.
+
 - `x AND y` - 1 if `x` and `y` are non-0. otherwise, 0.
 - `x OR y` - 1 if either `x` or `y` are non-0. otherwise, 0.
 - `x [+|-|*|/] y` - self explanatory arithmetic operations. `/` is of note, because operands are int, will get floor'd.
