@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# NOTE- REQUIRES ImageMagick
+# Wraps fake compatibility for non-BMP files into pixQL.
+# Simply shuffles to convert image to and from BMP before and after handing it to pixQL.
+
 if [ $# -le 1 ]; then echo "usage: ./pixql_c [-i infile] -o outfile [-q query | -q queryfile]"; exit 1; fi;
 
 INFILE=

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# NOTE- REQUIRES ImageMagick
+
 if [ $# -ne 1 ]; then echo "usage: ./rainbow.sh infile.bmp"; exit 1; fi;
 if [ -f bow.bmp ]; then echo "delete or move bow.bmp before running"; exit 1; fi
 if [ -f tmp.pql ]; then echo "delete or move tmp.pql before running"; exit 1; fi

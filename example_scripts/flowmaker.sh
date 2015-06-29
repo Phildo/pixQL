@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# NOTE- REQUIRES ImageMagick
+# Creates a funky flow-y rainbow gif that traverses the image's red channel.
+
 if [ $# -ne 1 ]; then echo "usage: ./flowmaker.sh infile.bmp"; exit 1; fi;
 if [ -f flow.gif ]; then echo "delete or move flow.gif before running"; exit 1; fi
 if [ -f tmp.pql ]; then echo "delete or move tmp.pql before running"; exit 1; fi
