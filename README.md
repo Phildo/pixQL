@@ -5,6 +5,8 @@ SQL inspired command-line image processing. *Note - very much still a work in pr
 
 That said, any bug reports, compatibility gaps, suggestions, etc... are welcome!
 
+**Update:** Added a simple bash script (pixQL/example_scripts/pixql_c) that adds other image compatibility to pixql. It simply uses ImageMagick to convert the files you supply it to and from BMP in passing them to pixQL. Takes same arguments as pixQL.
+
 **Goal:** Use simple, clean, composable rules to allow for precise pixel-level image operations.
 
 *This document is rather informal, as pixQL is still early in development. Also, I've never written much technical documentation before- any help or suggestions welcome!*
@@ -42,7 +44,7 @@ pixql -o out.bmp -q "BLACK(100,100); SELECT WHERE ROW % 20 < 10; OPERATE SET COL
 ## query syntax
 While *inspired* by the ideas of other SQL's out there, there are a couple differences.
 
-Every query consists of an optional `init` statement, followed by any number of `procedures`.
+Every query consists of one or more semicolon separated *statements*: an optional `init` statement, followed by any number of `procedure` statements.
 
 ### init
 This statement sets up the canvas on which you will perform operations. It takes the form of a single word, followed by optionally specifying dimensions (in parenthesis), followed by a semicolon.
@@ -57,7 +59,7 @@ The options for initializer word are as follows:
 - `CLEAR` : sets all pixels to clear (#00000000)
 - `COPY`  : copies input image (if size differs, copies window origin top-left)
 
-If no initializer word, `COPY` is default. If no dimensions, dimensions of input is default. If no input, MUST specify initializer word AND dimensions.
+If no initializer word, `COPY` is default. If no dimensions, dimensions of input is default. If no input file, MUST specify initializer word AND dimensions.
 
 ### procedure
 A procedure consists of any number of `SELECT`s, followed by any number of `OPERATE`s.
