@@ -1,0 +1,72 @@
+#!/bin/bash
+
+if [ $# -le 1 ]; then echo "usage: ./pixql_c [-i infile] -o outfile [-q query | -q queryfile]"; exit 1; fi;
+
+INFILE=
+OUTFILE=
+QUERY=
+QUERYFILE=
+
+INFILENAME=
+INFILEEXT=
+BMPINFILE=
+OUTFILENAME=
+OUTFILEEXT=
+BMPOUTFILE=
+
+INARGS=
+OUTARGS=
+
+#read args
+while (( $# )); do
+  if   [ $1 = "-i" ];  then INFILE=$2;    shift
+  elif [ $1 = "-o" ];  then OUTFILE=$2;   shift
+  elif [ $1 = "-q" ];  then QUERY=$2;     shift
+  elif [ $1 = "-qf" ]; then QUERYFILE=$2; shift
+  fi
+  shift
+done
+
+#derive names
+if [ -n "$INFILE" ]; then
+  INFILENAME="${INFILE%%.*}"
+  INFILEEXT="${INFILE#*.}"
+  BMPINFILE=$INFILENAME.bmp
+fi
+if [ -n "$OUTFILE" ]; then
+  OUTFILENAME="${OUTFILE%%.*}"
+  OUTFILEEXT="${OUTFILE#*.}"
+  BMPOUTFILE=$OUTFILENAME.bmp
+fi
+
+#convert infile
+if [ -n "$INFILE" ] && [[ $INFILEEXT != 'bmp' ]] && [[ $INFILEEXT != 'BMP' ]]; then
+  if [ -f $BMPINFILE ]; then echo "delete or move $BMPINFILE before running (used for compatibility shuffle)"; exit 1; fi
+  convert -depth 24 $INFILE $BMPINFILE
+fi
+
+#derive args
+if [ -n "$INFILE" ];    then INARGS="-i $BMPINFILE";     fi
+if [ -n "$OUTFILE" ];   then OUTARGS="-o $BMPOUTFILE";   fi
+
+if [ -n "$QUERY" ]; then
+  pixql $INARGS $OUTARGS -q "$QUERY"
+elif [ -n "$QUERYFILE" ]; then
+  pixql $INARGS $OUTARGS -qf "$QUERYFILE"
+else
+  pixql $INARGS $OUTARGS
+fi
+
+#convert outfile
+if [ -n "$OUTFILE" ] && [[ $OUTFILEEXT != 'bmp' ]] && [[ $OUTFILEEXT != 'BMP' ]]; then
+  if [ -f $OUTFILE ]; then echo "delete or move $OUTFILE before running (used for compatibility shuffle)"; exit 1; fi
+  convert $BMPOUTFILE $OUTFILE
+fi
+
+if [ -n "$INFILE" ] && [[ $INFILEEXT != 'bmp' ]] && [[ $INFILEEXT != 'BMP' ]]; then
+  rm $BMPINFILE
+fi
+if [ -n "$OUTFILE" ] && [[ $OUTFILEEXT != 'bmp' ]] && [[ $OUTFILEEXT != 'BMP' ]]; then
+  rm $BMPOUTFILE
+fi
+

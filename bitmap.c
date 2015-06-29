@@ -199,57 +199,76 @@ ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err)
   return NO_ERR;
 }
 
+byte maskMap(uint32 mask)
+{
+  switch(mask)
+  {
+    case 0xff000000: return 3; break;
+    case 0x00ff0000: return 2; break;
+    case 0x0000ff00: return 1; break;
+    case 0x000000ff: return 0; break;
+    default: return 255; break;
+  }
+  return 255;
+}
+
 static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
 {
   byte *data = b->pixel_array;
   int roww = b->simple.row_w;
 
+  byte rmask = 0;
+  byte gmask = 0;
+  byte bmask = 0;
+  byte amask = 0;
+
   switch(b->simple.bpp)
   {
     case 32:
-      if(b->simple.compression == 3 &&
-          !(
-          b->simple.r_mask == 0xff000000 &&
-          b->simple.g_mask == 0x00ff0000 &&
-          b->simple.b_mask == 0x0000ff00 &&
-            (
-              b->simple.a_mask == 0x000000ff ||
-              b->simple.a_mask == 0x00000000
-            )
-          )
-        )
-        ERROR("Error parsing weird bit masks");
+      rmask = 3;
+      gmask = 2;
+      bmask = 1;
+      amask = 0;
+      if(b->simple.compression == 3)
+      {
+        rmask = maskMap(b->simple.r_mask);
+        gmask = maskMap(b->simple.g_mask);
+        bmask = maskMap(b->simple.b_mask);
+        amask = maskMap(b->simple.a_mask);
+      }
 
       for(int i = 0; i < img->height; i++)
       {
         for(int j = 0; j < img->width; j++)
         {
-          img->data[(i*img->width)+j].a = data[(i*roww)+(j*4)+0];
-          img->data[(i*img->width)+j].b = data[(i*roww)+(j*4)+1];
-          img->data[(i*img->width)+j].g = data[(i*roww)+(j*4)+2];
-          img->data[(i*img->width)+j].r = data[(i*roww)+(j*4)+3];
+          img->data[(i*img->width)+j].a = amask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+amask];
+          img->data[(i*img->width)+j].b = bmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+bmask];
+          img->data[(i*img->width)+j].g = gmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+gmask];
+          img->data[(i*img->width)+j].r = rmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+rmask];
         }
       }
     break;
     case 24:
-      if(b->simple.compression == 3 &&
-          !(
-          b->simple.r_mask == 0xff000000 &&
-          b->simple.g_mask == 0x00ff0000 &&
-          b->simple.b_mask == 0x0000ff00 &&
-          b->simple.a_mask == 0x00000000
-          )
-        )
-        ERROR("Error parsing weird bit masks");
+      rmask = 2;
+      gmask = 1;
+      bmask = 0;
+      amask = 255;
+      if(b->simple.compression == 3)
+      {
+        rmask = maskMap(b->simple.r_mask);
+        gmask = maskMap(b->simple.g_mask);
+        bmask = maskMap(b->simple.b_mask);
+        amask = maskMap(b->simple.a_mask);
+      }
 
       for(int i = 0; i < img->height; i++)
       {
         for(int j = 0; j < img->width; j++)
         {
-          img->data[(i*img->width)+j].a = 255;
-          img->data[(i*img->width)+j].b = data[((img->height-1-i)*roww)+(j*3)+0];
-          img->data[(i*img->width)+j].g = data[((img->height-1-i)*roww)+(j*3)+1];
-          img->data[(i*img->width)+j].r = data[((img->height-1-i)*roww)+(j*3)+2];
+          img->data[(i*img->width)+j].a = amask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+bmask];
+          img->data[(i*img->width)+j].b = bmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+bmask];
+          img->data[(i*img->width)+j].g = gmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+gmask];
+          img->data[(i*img->width)+j].r = rmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+rmask];
         }
       }
     break;
