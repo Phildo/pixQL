@@ -5,7 +5,7 @@ SQL inspired command-line image processing. *Note - very much still a work in pr
 
 That said, any bug reports, compatibility gaps, suggestions, etc... are welcome!
 
-**Update:** Added a simple bash script (pixQL/example_scripts/pixql_c) that adds other image compatibility to pixql. It simply uses ImageMagick to convert the files you supply it to and from BMP in passing them to pixQL. Takes same arguments as pixQL.
+**Update:** Temporary fix to compatibility issues: Added a simple bash script (pixQL/example_scripts/pixql_c) that adds other image compatibility to pixql. It simply uses ImageMagick to convert the files you supply it to and from BMP in passing them to pixQL. Takes same arguments as pixQL.
 
 **Goal:** Use simple, clean, composable rules to allow for precise pixel-level image operations.
 
