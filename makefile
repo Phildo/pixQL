@@ -1,4 +1,4 @@
-CURDIR = ~/Desktop/pixQL
+CURDIR = $(shell pwd)
 SRCDIR = .
 OUTFILE = pixql
 CC = gcc
