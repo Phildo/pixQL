@@ -42,9 +42,12 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
   if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
   if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
+  Pix *p;
   switch(m->type)
   {
-    case QUERY_MEMBER_TYPE_COLOR: return pixAt(t,pcol,prow)->r; break; //actually return color
+    case QUERY_MEMBER_TYPE_COLOR:
+      p = pixAt(t,pcol,prow);
+      return (p->r << 24) + (p->g << 16) + (p->b << 8) + (p->a << 0);
     case QUERY_MEMBER_TYPE_R: return pixAt(t,pcol,prow)->r;break;
     case QUERY_MEMBER_TYPE_G: return pixAt(t,pcol,prow)->g;break;
     case QUERY_MEMBER_TYPE_B: return pixAt(t,pcol,prow)->b;break;
