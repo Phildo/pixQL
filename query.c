@@ -599,6 +599,7 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
 {
   tokinit;
   int tmp_pos = 0;
+  int tmp_pos_2 = 0;
 
   tok;
        if(teq("copy")) init->type = QUERY_INIT_TYPE_COPY;
@@ -611,10 +612,11 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
   tok;
   if(teq("("))
   {
+    tmp_pos = o+closingParen(q, o, e); //save for closing paren
     commit;
 
-    tmp_pos = charPos(q,',',o);
-    l = parseIntoExpression(q,o,tmp_pos,0,&init->width,err);
+    tmp_pos_2 = charPos(q,',',o);
+    l = parseIntoExpression(q,o,tmp_pos_2,0,&init->width,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -626,7 +628,7 @@ static int parseIntoInit(char *q, int s, int e, QueryInit *init, QueryError *err
     if(!teq(",")) QERROR(QUERY_ERROR_TYPE_PARSE,"Error parsing init, expected ','");
     commit;
 
-    l = parseIntoExpression(q,o,e,0,&init->height,err);
+    l = parseIntoExpression(q,o,tmp_pos,0,&init->height,err);
     switch(err->type)
     {
       case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
@@ -657,7 +659,7 @@ static int parseInit(char *q, int s, int e, Query *query, QueryError *err)
 {
   tokinit;
 
-  l = parseIntoInit(q,o,s,&query->init,err);
+  l = parseIntoInit(q,o,e,&query->init,err);
   switch(err->type)
   {
     case QUERY_ERROR_TYPE_PARSE: QERRORPASS; break;
