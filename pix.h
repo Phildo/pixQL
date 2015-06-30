@@ -2,6 +2,7 @@
 #define _PIX_H_
 
 #include "dotypes.h"
+#include "err.h"
 
 typedef struct
 {
@@ -20,7 +21,7 @@ typedef struct
 
 Pix *pixAt(PixImg *img, uint32 col, uint32 row);
 Pix *set(Pix *pix, byte r, byte g, byte b, byte a);
-PixImg *initImg(PixImg *img, uint32 width, uint32 height, uint32 color);
+ERR_EXISTS initImg(PixImg *img, uint32 width, uint32 height, uint32 color, PixErr *err);
 
 #endif
 

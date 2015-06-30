@@ -32,6 +32,7 @@ ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char 
   {
     int max_len = 2048;
     *query = malloc(max_len);
+    if(!*query) ERROR("Out of memory");
     FILE *qf;
     if(!(qf = fopen(*queryfile, "r"))) ERROR("Can't open query file- %s",*queryfile);
     if(!fread(*query, sizeof(byte), max_len, qf)) ERROR("Can't read query file");

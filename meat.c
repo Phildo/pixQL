@@ -233,7 +233,7 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       */
     }
     if(!init_width || !init_height) ERROR("No input file nor init dimensions specified");
-    initImg(in_img, init_width, init_height, color);
+    if(!initImg(in_img, init_width, init_height, color, err)) return ERR;
   }
 
   out_img->width = init_width;
@@ -242,7 +242,9 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   if(out_img->height == 0) out_img->height = in_img->height;
 
   out_img->data  = calloc(out_img->width*out_img->height*sizeof(Pix),1);
+  if(!out_img->data) ERROR("Out of memory");
   selection_mask = calloc(out_img->width*out_img->height*sizeof(byte),1);
+  if(!selection_mask) ERROR("Out of memory");
 
   switch(init->type)
   {

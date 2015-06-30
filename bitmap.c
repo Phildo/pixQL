@@ -124,6 +124,7 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
 
   fseek(in, simple->offset_to_data, SEEK_SET);
   b->pixel_array = calloc(simple->pixel_n_bytes,1);
+  if(!b->pixel_array) ERROR("Out of memory");
   byte *pa = b->pixel_array;
   if(!readPixelArray(in, pa, simple->pixel_n_bytes, err)) { fclose(in); return ERR; }
 
@@ -310,6 +311,7 @@ ERR_EXISTS bitmapToImage(Bitmap *b, PixImg *img, PixErr *err)
   img->width  = b->simple.width;
   img->height = b->simple.height;
   img->data = calloc(img->width*img->height*sizeof(Pix),1);
+  if(!img->data) ERROR("Out of memory");
   if(!dataToPix(b, img, err)) return ERR;
   return NO_ERR;
 }
@@ -358,6 +360,7 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
   simple->a_mask = v5h->bV5AlphaMask;
 
   b->pixel_array = calloc(datasize,1);
+  if(!b->pixel_array) ERROR("Out of memory");
   if(!pixToData(img, b, err)) return ERR;
 
   return NO_ERR;
