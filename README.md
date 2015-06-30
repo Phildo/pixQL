@@ -12,7 +12,7 @@ That said, any bug reports, compatibility gaps, suggestions, etc... are welcome!
 *This document is rather informal, as pixQL is still early in development. Also, I've never written much technical documentation before- any help or suggestions welcome!*
 
 ##overview
-The general idea is that you can supply an input image, and define a subset of pixels that you'd like to "select" (example: "give me all the pixels on the left half of the image"). You can then specify an operation you'd like to be applied on each of those pixels ("invert the pixels"). Using a series of selections and operations, you can perform coplex image manipulations.
+The general idea is that you can supply an input image, and define a subset of pixels that you'd like to "select" (example: "give me all the pixels on the left half of the image"). You can then specify an operation you'd like to be applied on each of those pixels ("invert the pixels"). Using a series of selections and operations, you can perform complex image manipulations.
 
 ##installation
 ```
