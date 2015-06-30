@@ -1,5 +1,5 @@
-#ifndef _TOKEN_H_
-#define _TOKEN_H_
+#ifndef TOKEN_H
+#define TOKEN_H
 
 extern int tokens_init;
 extern const char *query_operation_tokens[];

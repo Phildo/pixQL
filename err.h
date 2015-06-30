@@ -1,5 +1,5 @@
-#ifndef _ERR_H_
-#define _ERR_H_
+#ifndef ERR_H
+#define ERR_H
 
 #include <stdio.h> //sprintf
 #define ERROR(...) ({ sprintf(err->info, ##__VA_ARGS__); return ERR; })

@@ -1,5 +1,5 @@
-#ifndef _IO_H_
-#define _IO_H_
+#ifndef IO_H
+#define IO_H
 
 #include "dotypes.h"
 #include "err.h"

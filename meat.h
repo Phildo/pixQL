@@ -1,5 +1,5 @@
-#ifndef _MEAT_H_
-#define _MEAT_H_
+#ifndef MEAT_H
+#define MEAT_H
 
 #include "pix.h"
 #include "query.h"

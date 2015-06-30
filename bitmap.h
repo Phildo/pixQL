@@ -1,5 +1,5 @@
-#ifndef _BITMAP_H_
-#define _BITMAP_H_
+#ifndef BITMAP_H
+#define BITMAP_H
 
 #include "dotypes.h"
 #include "err.h"

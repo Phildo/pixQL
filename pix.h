@@ -1,5 +1,5 @@
-#ifndef _PIX_H_
-#define _PIX_H_
+#ifndef PIX_H
+#define PIX_H
 
 #include "dotypes.h"
 #include "err.h"

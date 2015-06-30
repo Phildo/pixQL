@@ -1,5 +1,5 @@
-#ifndef _QUERY_H_
-#define _QUERY_H_
+#ifndef QUERY_H
+#define QUERY_H
 
 #include "err.h"
 

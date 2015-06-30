@@ -1,5 +1,5 @@
-#ifndef _DO_TYPES_H_
-#define _DO_TYPES_H_
+#ifndef DO_TYPES_H
+#define DO_TYPES_H
 
 #include <stdint.h>
 
