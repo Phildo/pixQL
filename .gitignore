@@ -5,3 +5,5 @@ pixQL_test
 .gdb_history
 tags
 .DS_Store
+pixql
+pixql_test
