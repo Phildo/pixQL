@@ -3,7 +3,7 @@
 
 extern int tokens_init;
 extern const char *query_operation_tokens[];
-extern const int QUERY_NUM_OO_LEVELS;
+enum { QUERY_NUM_OO_LEVELS = 9 }; //ugh
 extern const int query_operation_token_oo_lvls[];
 extern char **query_operation_tokens_of_oo_lvl[];
 extern const char *query_property_tokens[];

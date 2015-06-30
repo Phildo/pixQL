@@ -51,7 +51,6 @@ const char *query_operation_tokens[] =
   "ABS",
   ""
 };
-const int QUERY_NUM_OO_LEVELS = 9;
 const int query_operation_token_oo_lvls[] = //manually keep in sync!
 {
   0, //"or",

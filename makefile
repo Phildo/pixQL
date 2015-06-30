@@ -3,8 +3,8 @@ SRCDIR = .
 OUTFILE = pixql
 CC = gcc
 DEBUGGER = gdb -q
-CFLAGS = -Wall
-LFLAGS = -Wall
+CFLAGS = -Wall -std=c99
+LFLAGS = -Wall -lm -std=c99
 DEBUGFLAGS = -ggdb3 -O0
 PRODFLAGS = -O3
 ALL_HEADERS:=$(wildcard $(CURDIR)/$(SRCDIR)/*.h)

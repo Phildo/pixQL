@@ -85,24 +85,15 @@ typedef struct
 typedef struct
 {
   QUERY_VALUE_TYPE type;
-  union
-  {
-    QueryConstant constant;
-    QueryMember member;
-  };
+  QueryConstant constant;
+  QueryMember member;
 } QueryValue;
 typedef struct QueryExpression
 {
   QUERY_EXPRESSION_TYPE type;
-  union
-  {
-    struct
-    {
-      struct QueryExpression *a;
-      struct QueryExpression *b;
-    };
-    QueryValue v;
-  };
+  struct QueryExpression *a;
+  struct QueryExpression *b;
+  QueryValue v;
 } QueryExpression;
 typedef struct
 {
