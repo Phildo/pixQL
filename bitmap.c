@@ -122,7 +122,7 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
   byte *g = b->gap1;
   if(!readGap(in, g, 0, err)) { fclose(in); return ERR; }
 
-  fseek(in, simple->offset_to_data, SEEK_SET);
+  if(fseek(in, simple->offset_to_data, SEEK_SET) == -1) ERROR("Unable to read bitmap file");
   b->pixel_array = calloc(simple->pixel_n_bytes,1);
   if(!b->pixel_array) ERROR("Out of memory");
   byte *pa = b->pixel_array;
