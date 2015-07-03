@@ -12,7 +12,10 @@ That said, any bug reports, compatibility gaps, suggestions, etc... are welcome!
 *This document is rather informal, as pixQL is still early in development. Also, I've never written much technical documentation before- any help or suggestions welcome!*
 
 ##overview
-The general idea is that you can supply an input image, and define a subset of pixels that you'd like to "select" (example: "give me all the pixels on the left half of the image"). You can then specify an operation you'd like to be applied on each of those pixels ("invert the pixels"). Using a series of selections and operations, you can perform coplex image manipulations.
+The general idea is that you can supply an input image, and define a subset of pixels that you'd like to "select" (example: "give me all the pixels on the left half of the image"). You can then specify an operation you'd like to be applied on each of those pixels ("invert the pixels"). Using a series of selections and operations, you can perform complex image manipulations.
+
+##license
+I am still in the process of deciding on a license... If you have any feedback or suggestions on this process, see the open issue on this subject at github.com.
 
 ##installation
 ```
@@ -105,6 +108,10 @@ Can specify pixel by TARGET[INDEX_COL,INDEX_ROW].PROPERTY
 If index left out, assumed to be currently checking index in selection mask.
 
 If target left out, assumed to be IN (EXCEPT in the case of the lvalue of an OPERATE, where it is assumed to be OUT)
+
+#### target
+- `IN` - the target representing your input file. This target is immutable.
+- `OUT` - the target representing your output file. The lvalue of an `OPERATE` statement defaults to this target.
 
 #### properties
 - `R` - pixel's red component (0-255)
