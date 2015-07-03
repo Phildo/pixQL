@@ -1,6 +1,7 @@
 #ifndef QUERY_H
 #define QUERY_H
 
+#include "dotypes.h"
 #include "err.h"
 
 typedef enum
@@ -73,7 +74,7 @@ struct QueryExpression;
 typedef struct
 {
   QUERY_CONSTANT_TYPE type;
-  int value;
+  int32 value;
 } QueryConstant;
 typedef struct
 {
@@ -109,9 +110,9 @@ typedef struct
 typedef struct
 {
   QuerySelection *selections;
-  int n_selections;
+  uint16 n_selections;
   QueryOperation *operations;
-  int n_operations;
+  uint16 n_operations;
 } QueryProcedure;
 typedef struct
 {
@@ -124,7 +125,7 @@ typedef struct
   long zero_pad;
   QueryInit init;
   QueryProcedure *procedures;
-  int n_procedures;
+  uint16 n_procedures;
 } Query;
 
 

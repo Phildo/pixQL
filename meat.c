@@ -3,23 +3,41 @@
 #include <stdlib.h>
 #include <math.h>
 
-int evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+typedef enum
+{
+  NUMBER_TYPE_INVALID,
+  NUMBER_TYPE_INT,
+  NUMBER_TYPE_REAL,
+} NUMBER_TYPE;
+typedef struct
+{
+  NUMBER_TYPE type;
+  uint8 b;
+  int64 i;
+  double r;
+} Number;
+
+static ERR_EXISTS evaluateValue(QueryValue *v, int row, int col, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
+static ERR_EXISTS evaluateExpression(QueryExpression *qexp, int row, int col, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
+static ERR_EXISTS evaluateOperation(QueryOperation *op, int row, int col, PixImg *target, PixImg *in, PixImg *out, PixErr *err);
+
+static ERR_EXISTS evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err)
 {
   switch(c->type)
   {
-    case QUERY_CONSTANT_TYPE_WIDTH: return target->width; break;
-    case QUERY_CONSTANT_TYPE_HEIGHT: return target->height; break;
-    case QUERY_CONSTANT_TYPE_ROW: return row; break;
-    case QUERY_CONSTANT_TYPE_COL: return col; break;
-    case QUERY_CONSTANT_TYPE_NUMBER: return c->value; break;
+    case QUERY_CONSTANT_TYPE_WIDTH: n->type = NUMBER_TYPE_INT; n->i = target->width; break;
+    case QUERY_CONSTANT_TYPE_HEIGHT: n->type = NUMBER_TYPE_INT; n->i = target->height; break;
+    case QUERY_CONSTANT_TYPE_ROW: n->type = NUMBER_TYPE_INT; n->i = row; break;
+    case QUERY_CONSTANT_TYPE_COL: n->type = NUMBER_TYPE_INT; n->i = col; break;
+    case QUERY_CONSTANT_TYPE_NUMBER: n->type = NUMBER_TYPE_INT; n->i = c->value; break;
     default:
-      //error!
-      return -1;
+      ERROR("Invalid constant type encountered");
       break;
   }
+  return NO_ERR;
 }
 
-int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+static ERR_EXISTS evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err)
 {
   PixImg *t = 0;
   int prow = 0;
@@ -31,14 +49,27 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
     case QUERY_TARGET_FALLBACK: t = target; break;
     case QUERY_TARGET_INVALID:
     default:
-      //error
+      ERROR("Invalid target encountered");
       break;
   }
 
-  if(m->row) prow = evaluateExpression(m->row,col,row,target,in,out,err);
-  else       prow = row;
-  if(m->col) pcol = evaluateExpression(m->col,col,row,target,in,out,err);
-  else       pcol = col;
+  Number na;
+  if(m->row)
+  {
+    if(!evaluateExpression(m->row,col,row,target,in,out,&na,err)) return ERR;
+    if(na.type != NUMBER_TYPE_INT) ERROR("Invalid row type");
+    prow = na.i;
+  }
+  else prow = row;
+
+  if(m->col)
+  {
+    if(!evaluateExpression(m->col,col,row,target,in,out,&na,err)) return ERR;
+    if(na.type != NUMBER_TYPE_INT) ERROR("Invalid col type");
+    pcol = na.i;
+  }
+  else pcol = col;
+
   if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
   if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
@@ -47,143 +78,218 @@ int evaluateMember(QueryMember *m, int col, int row, PixImg *target, PixImg *in,
   {
     case QUERY_MEMBER_TYPE_COLOR:
       p = pixAt(t,pcol,prow);
-      return (p->r << 24) + (p->g << 16) + (p->b << 8) + (p->a << 0);
-    case QUERY_MEMBER_TYPE_R: return pixAt(t,pcol,prow)->r;break;
-    case QUERY_MEMBER_TYPE_G: return pixAt(t,pcol,prow)->g;break;
-    case QUERY_MEMBER_TYPE_B: return pixAt(t,pcol,prow)->b;break;
-    case QUERY_MEMBER_TYPE_A: return pixAt(t,pcol,prow)->a;break;
-    case QUERY_MEMBER_TYPE_ROW: return prow; break;
-    case QUERY_MEMBER_TYPE_COL: return pcol; break;
+      n->type = NUMBER_TYPE_INT;
+      n->i = (p->r << 24) + (p->g << 16) + (p->b << 8) + (p->a << 0);
+      break;
+    case QUERY_MEMBER_TYPE_R:   n->type = NUMBER_TYPE_INT; n->i = pixAt(t,pcol,prow)->r; break;
+    case QUERY_MEMBER_TYPE_G:   n->type = NUMBER_TYPE_INT; n->i = pixAt(t,pcol,prow)->g; break;
+    case QUERY_MEMBER_TYPE_B:   n->type = NUMBER_TYPE_INT; n->i = pixAt(t,pcol,prow)->b; break;
+    case QUERY_MEMBER_TYPE_A:   n->type = NUMBER_TYPE_INT; n->i = pixAt(t,pcol,prow)->a; break;
+    case QUERY_MEMBER_TYPE_ROW: n->type = NUMBER_TYPE_INT; n->i = prow; break;
+    case QUERY_MEMBER_TYPE_COL: n->type = NUMBER_TYPE_INT; n->i = pcol; break;
     default:
-      //error
-      return -1;
+      ERROR("Invalid member type encountered");
       break;
   }
+  return NO_ERR;
 }
 
-int evaluateValue(QueryValue *v, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+static ERR_EXISTS evaluateValue(QueryValue *v, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err)
 {
   switch(v->type)
   {
-    case QUERY_VALUE_TYPE_MEMBER:
-      return evaluateMember(&v->member,col,row,target,in,out,err);
-    break;
-    case QUERY_VALUE_TYPE_CONSTANT:
-      return evaluateConstant(&v->constant,col,row,target,in,out,err);
-    break;
-    default:
-      //error
-      return -1;
-      break;
+    case QUERY_VALUE_TYPE_MEMBER:   if(!evaluateMember(&v->member,col,row,target,in,out,n,err))     return ERR; break;
+    case QUERY_VALUE_TYPE_CONSTANT: if(!evaluateConstant(&v->constant,col,row,target,in,out,n,err)) return ERR; break;
+    default: ERROR("Invalid value type encountered"); break;
   }
+  return NO_ERR;
 }
 
-int evaluateExpression(QueryExpression *qexp, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+static ERR_EXISTS evaluateExpression(QueryExpression *qexp, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err)
 {
+  Number na, nb;
+  if(qexp->a) if(!evaluateExpression(qexp->a,col,row,target,in,out,&na,err)) return ERR;
+  if(qexp->b) if(!evaluateExpression(qexp->b,col,row,target,in,out,&nb,err)) return ERR;
+
   switch(qexp->type)
   {
-    case QUERY_EXPRESSION_TYPE_INVALID:
-      return 0;
-      break;
     case QUERY_EXPRESSION_TYPE_OR:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) || evaluateExpression(qexp->b,col,row,target,in,out,err);
+    {
+      if(na.type == NUMBER_TYPE_REAL || nb.type == NUMBER_TYPE_REAL) ERROR("OR of real unsupported (cast to int)");
+      n->type = NUMBER_TYPE_INT; n->i = na.i || nb.i;
+    }
       break;
     case QUERY_EXPRESSION_TYPE_AND:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) && evaluateExpression(qexp->b,col,row,target,in,out,err);
+    {
+      if(na.type == NUMBER_TYPE_REAL || nb.type == NUMBER_TYPE_REAL) ERROR("AND of real unsupported (cast to int)");
+      n->type = NUMBER_TYPE_INT; n->i = na.i && nb.i;
+    }
       break;
     case QUERY_EXPRESSION_TYPE_NOT:
-      return !evaluateExpression(qexp->a,col,row,target,in,out,err);
+    {
+      switch(na.type)
+      {
+        case NUMBER_TYPE_INT:  n->type = NUMBER_TYPE_INT; n->i = (na.i == 0);    break;
+        case NUMBER_TYPE_REAL: n->type = NUMBER_TYPE_INT; n->i = (na.r == 0.0f); break;
+        default: break; //shouldn't happen
+      }
+    }
       break;
     case QUERY_EXPRESSION_TYPE_EQ:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) == evaluateExpression(qexp->b,col,row,target,in,out,err);
+    {
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i == nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i == nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r == (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r == nb.r); }
+    }
       break;
     case QUERY_EXPRESSION_TYPE_NE:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) != evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i != nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i != nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r != (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r != nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_LT:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) < evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i < nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i < nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r < (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r < nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_LTE:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) <= evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i <= nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i <= nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r <= (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r <= nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_GTE:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) >= evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i >= nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i >= nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r >= (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r >= nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_GT:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) > evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.i > nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = ((double)na.i > nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = (na.r > (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (na.r > nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_SUB:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) - evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = (na.i - nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = ((double)na.i - nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = (na.r - (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = (na.r - nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_ADD:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) + evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = (na.i + nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = ((double)na.i + nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = (na.r + (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = (na.r + nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_DIV:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) / evaluateExpression(qexp->b,col,row,target,in,out,err);
+      if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)
+      {
+        if((na.i/nb.i)*nb.i == na.i) //aka "if integer division is lossless"
+        {
+          n->type = NUMBER_TYPE_INT;
+          n->i = (na.i / nb.i);
+        }
+        else
+        {
+          n->type = NUMBER_TYPE_REAL;
+          n->r = ((float)na.i / (float)nb.i);
+        }
+      }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = ((double)na.i / nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = (na.r / (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = (na.r / nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_MUL:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) * evaluateExpression(qexp->b,col,row,target,in,out,err);
+           if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = (na.i * nb.i); }
+      else if(na.type == NUMBER_TYPE_INT  && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = ((double)na.i * nb.r); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = (na.r * (double)nb.i); }
+      else if(na.type == NUMBER_TYPE_REAL && nb.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = (na.r * nb.r); }
       break;
     case QUERY_EXPRESSION_TYPE_MOD:
-      return evaluateExpression(qexp->a,col,row,target,in,out,err) % evaluateExpression(qexp->b,col,row,target,in,out,err);
+      if(na.type == NUMBER_TYPE_REAL || nb.type == NUMBER_TYPE_REAL) ERROR("Modulus of real unsupported (cast to int)");
+      n->type = NUMBER_TYPE_INT; n->i = (na.i % nb.i);
       break;
     case QUERY_EXPRESSION_TYPE_SIN:
-      return sin(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = sin((double)na.i); }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = sin(na.r); }
       break;
     case QUERY_EXPRESSION_TYPE_COS:
-      return cos(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = cos((double)na.i); }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = cos(na.r); }
       break;
     case QUERY_EXPRESSION_TYPE_TAN:
-      return tan(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_REAL; n->r = tan((double)na.i); }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = tan(na.r); }
       break;
     case QUERY_EXPRESSION_TYPE_ABS:
-      return abs(evaluateExpression(qexp->a,col,row,target,in,out,err));
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = abs((int)na.i); }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = fabs(na.r); }
       break;
     case QUERY_EXPRESSION_TYPE_NEG:
-      return -1 * evaluateExpression(qexp->a,col,row,target,in,out,err);
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = -1 * na.i; }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = -1.0f * na.r; }
       break;
     case QUERY_EXPRESSION_TYPE_VALUE:
-      return evaluateValue(&qexp->v,col,row,target,in,out,err);
+      if(!evaluateValue(&qexp->v,col,row,target,in,out,n,err)) return ERR;
       break;
+    case QUERY_EXPRESSION_TYPE_INVALID:
     default:
-      //error
-      return -1;
+      ERROR("Invalid query expression type");
       break;
   }
+  return NO_ERR;
 }
 
-void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
+static ERR_EXISTS evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err)
 {
   PixImg *t;
   switch(op->operating)
   {
     case QUERY_TARGET_IN: t = in; break;
     case QUERY_TARGET_OUT: t = out; break;
-    case QUERY_TARGET_FALLBACK: t = target; break;
-    case QUERY_TARGET_INVALID:
     default:
-      t = target; //to clear up warning
-      //error
+      ERROR("Invalid target encountered");
       break;
   }
 
-  int val = evaluateExpression(&op->rval,col,row,t,in,out,err);
+  Number rval;
+  if(!evaluateExpression(&op->rval,col,row,t,in,out,&rval,err)) return ERR;
 
   QueryMember *lval = &op->lval;
   int prow = 0;
   int pcol = 0;
 
-  if(lval->row) prow = evaluateExpression(lval->row,col,row,t,in,out,err);
-  else          prow = row;
-  if(lval->col) pcol = evaluateExpression(lval->col,col,row,t,in,out,err);
-  else          pcol = col;
+  Number na;
+  if(lval->row)
+  {
+    if(!evaluateExpression(lval->row,col,row,t,in,out,&na,err)) return ERR;
+    if(na.type != NUMBER_TYPE_INT) ERROR("Invalid row type");
+    prow = na.i;
+  }
+  else prow = row;
+
+  if(lval->col)
+  {
+    if(!evaluateExpression(lval->col,col,row,t,in,out,&na,err)) return ERR;
+    if(na.type != NUMBER_TYPE_INT) ERROR("Invalid col type");
+    pcol = na.i;
+  }
+  else pcol = col;
+
   if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
   if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
 
   int v;
+  int val;
   switch(lval->type)
   {
     case QUERY_MEMBER_TYPE_COLOR:
+      if(rval.type == NUMBER_TYPE_REAL) ERROR("Invalid rvalue for setting color");
+      val = rval.i;
       v = (val & 0xff000000) >> 24;
       pixAt(out,pcol,prow)->r = v;
       v = (val & 0x00ff0000) >> 16;
@@ -193,16 +299,34 @@ void evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, Pix
       v = (val & 0x000000ff) >> 0;
       pixAt(out,pcol,prow)->a = v;
       break;
-    case QUERY_MEMBER_TYPE_R: pixAt(out,pcol,prow)->r = val; break;
-    case QUERY_MEMBER_TYPE_G: pixAt(out,pcol,prow)->g = val; break;
-    case QUERY_MEMBER_TYPE_B: pixAt(out,pcol,prow)->b = val; break;
-    case QUERY_MEMBER_TYPE_A: pixAt(out,pcol,prow)->a = val; break;
-    case QUERY_MEMBER_TYPE_ROW: break; //can of worms
-    case QUERY_MEMBER_TYPE_COL: break; //can of worms
+    case QUERY_MEMBER_TYPE_R:
+      if(rval.type == NUMBER_TYPE_REAL) val = (int)rval.r;
+      else                              val = rval.i;
+      pixAt(out,pcol,prow)->r = val;
+      break;
+    case QUERY_MEMBER_TYPE_G:
+      if(rval.type == NUMBER_TYPE_REAL) val = (int)rval.r;
+      else                              val = rval.i;
+      pixAt(out,pcol,prow)->g = val;
+      break;
+    case QUERY_MEMBER_TYPE_B:
+      if(rval.type == NUMBER_TYPE_REAL) val = (int)rval.r;
+      else                              val = rval.i;
+      pixAt(out,pcol,prow)->b = val;
+      break;
+    case QUERY_MEMBER_TYPE_A:
+      if(rval.type == NUMBER_TYPE_REAL) val = (int)rval.r;
+      else                              val = rval.i;
+      pixAt(out,pcol,prow)->a = val;
+      break;
+    case QUERY_MEMBER_TYPE_ROW:
+    case QUERY_MEMBER_TYPE_COL:
+      //can of worms
     default:
-      //error
+      ERROR("Invalid attribute for lvalue");
       break;
   }
+  return NO_ERR;
 }
 
 ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *err)
@@ -210,8 +334,17 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
   byte *selection_mask;
 
   QueryInit *init = &query->init;
-  uint32 init_width = evaluateExpression(&init->width,-1,-1,in_img,in_img,out_img,err);
-  uint32 init_height = evaluateExpression(&init->height,-1,-1,in_img,in_img,out_img,err);
+  Number n;
+
+  uint32 init_width;
+  if(!evaluateExpression(&init->width,-1,-1,in_img,in_img,out_img,&n,err)) return ERR;
+  if(n.type == NUMBER_TYPE_REAL) ERROR("Invalid width type");
+  init_width = n.i;
+
+  uint32 init_height;
+  if(!evaluateExpression(&init->height,-1,-1,in_img,in_img,out_img,&n,err)) return ERR;
+  if(n.type == NUMBER_TYPE_REAL) ERROR("Invalid height type");
+  init_height = n.i;
 
   if(!in_img->data)
   {
@@ -223,14 +356,6 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       case QUERY_INIT_TYPE_BLACK: color = 0x000000FF; break;
       case QUERY_INIT_TYPE_CLEAR: color = 0x00000000; break;
       default: color = 0xFFFFFFFF; break;
-      /*
-        color = 0xFF0000FF;
-        color = 0x00FF00FF;
-        color = 0x0000FFFF;
-        color = 0x00FFFFFF;
-        color = 0xFF00FFFF;
-        color = 0xFFFF00FF;
-      */
     }
     if(!init_width || !init_height) ERROR("No input file nor init dimensions specified");
     if(!initImg(in_img, init_width, init_height, color, err)) return ERR;
@@ -299,7 +424,7 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       s = &p->selections[j];
       switch(s->selecting)
       {
-        case QUERY_TARGET_IN: default_selecting = in_img; break;
+        case QUERY_TARGET_IN:  default_selecting = in_img; break;
         case QUERY_TARGET_OUT: default_selecting = out_img; break;
         case QUERY_TARGET_FALLBACK:
         case QUERY_TARGET_INVALID:
@@ -309,9 +434,15 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       }
 
       for(int k = 0; k < out_img->height; k++)
+      {
         for(int l = 0; l < out_img->width; l++)
-          if(evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,err))
-            selection_mask[(k*out_img->width)+l] = 1;
+        {
+          if(!evaluateExpression(&s->exp,l,k,default_selecting,in_img,out_img,&n,err)) return ERR;
+
+               if(n.type == NUMBER_TYPE_REAL && n.r != 0.0f) selection_mask[(k*out_img->width)+l] = 1;
+          else if(n.type == NUMBER_TYPE_INT  && n.i != 0)    selection_mask[(k*out_img->width)+l] = 1;
+        }
+      }
     }
 
     for(int j = 0; j < p->n_operations; j++)
@@ -319,19 +450,17 @@ ERR_EXISTS executeQuery(Query *query, PixImg *in_img, PixImg *out_img, PixErr *e
       o = &p->operations[j];
       switch(o->operating)
       {
-        case QUERY_TARGET_IN: default_operating = in_img; break;
+        case QUERY_TARGET_IN:  default_operating = in_img; break;
         case QUERY_TARGET_OUT: default_operating = out_img; break;
         case QUERY_TARGET_FALLBACK:
         case QUERY_TARGET_INVALID:
-        default:
-          //error
-          break;
+        default: ERROR("Invalid target"); break;
       }
 
       for(int k = 0; k < out_img->height; k++)
         for(int l = 0; l < out_img->width; l++)
           if(selection_mask[(k*out_img->width)+l])
-            evaluateOperation(o,l,k,default_operating,in_img,out_img,err);
+            if(!evaluateOperation(o,l,k,default_operating,in_img,out_img,err)) return ERR;
     }
   }
 

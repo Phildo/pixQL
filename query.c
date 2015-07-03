@@ -17,7 +17,7 @@ typedef enum
 {
   QUERY_ERROR_TYPE_NONE,
   QUERY_ERROR_TYPE_OPTIONAL, //used when error might just be misinterpretation of optional syntax
-  QUERY_ERROR_TYPE_PARSE
+  QUERY_ERROR_TYPE_PARSE,
 } QUERY_ERROR_TYPE;
 
 typedef struct
