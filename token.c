@@ -49,6 +49,7 @@ const char *query_operation_tokens[] =
   "COS",
   "TAN",
   "ABS",
+  "INT",
   ""
 };
 const int query_operation_token_oo_lvls[] = //manually keep in sync!
@@ -71,6 +72,7 @@ const int query_operation_token_oo_lvls[] = //manually keep in sync!
   8, //"COS",
   8, //"TAN",
   8, //"ABS",
+  8, //"INT",
   0  //""
 };
 char **query_operation_tokens_of_oo_lvl[QUERY_NUM_OO_LEVELS];

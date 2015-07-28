@@ -48,17 +48,21 @@ static ERR_EXISTS readDIBHeader(FILE *fp, DIBHeader *dh, PixErr *err)
   READFIELD(ih->compression);
   if(!(ih->compression == 0 || ih->compression == 3)) ERROR("Unable to process compressed bitmaps");
   READFIELD(ih->image_size);
-  if(!(ih->image_size == 0 || ih->image_size >= ih->width*ih->height*(ih->bpp/8))) ERROR("Unable to process compressed bitmaps");
+  if(!(ih->image_size == 0 || ih->image_size >= ih->width*abs(ih->height)*(ih->bpp/8))) ERROR("Unable to process compressed bitmaps");
   READFIELD(ih->horiz_resolution);
   READFIELD(ih->vert_resolution);
   READFIELD(ih->ncolors);
   if(ih->ncolors != 0) ERROR("Unable to process indexed bitmaps");
   READFIELD(ih->nimportantcolors);
 
-  READFIELD(v5h->bV5RedMask);
-  READFIELD(v5h->bV5GreenMask);
-  READFIELD(v5h->bV5BlueMask);
-  READFIELD(v5h->bV5AlphaMask);
+  if(dh->header_size == BITMAPV5HEADER_SIZE && ih->compression == 3)
+  {
+    READFIELD(v5h->bV5RedMask);
+    READFIELD(v5h->bV5GreenMask);
+    READFIELD(v5h->bV5BlueMask);
+    if(ih->bpp == 32) READFIELD(v5h->bV5AlphaMask);
+    else v5h->bV5AlphaMask = 0;
+  }
 
   return NO_ERR;
 }
@@ -100,7 +104,8 @@ ERR_EXISTS readBitmap(const char *infile, Bitmap *b, PixErr *err)
 
   //put together useful info in reading the rest
   simple->width = dh->bitmap_info_header.width;
-  simple->height = dh->bitmap_info_header.height;
+  simple->height = abs(dh->bitmap_info_header.height);
+  simple->reversed = dh->bitmap_info_header.height < 0;
   simple->bpp = dh->bitmap_info_header.bpp;
   simple->row_w = ((simple->bpp*simple->width+31)/32)*4;
   simple->pixel_n_bytes = simple->row_w*simple->height;
@@ -188,7 +193,7 @@ ERR_EXISTS writeBitmap(const char *outfile, Bitmap *b, PixErr *err)
   WRITEFIELD(v5h->bV5GammaRed);
   WRITEFIELD(v5h->bV5GammaGreen);
   WRITEFIELD(v5h->bV5GammaBlue);
-  v5h->bV5Intent = 2; //i have no idea what is going on here.
+  v5h->bV5Intent = 2; //i have no idea what is going on here
   WRITEFIELD(v5h->bV5Intent);
   WRITEFIELD(v5h->bV5ProfileData);
   WRITEFIELD(v5h->bV5ProfileSize);
@@ -230,7 +235,14 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
       gmask = 2;
       bmask = 1;
       amask = 0;
-      if(b->simple.compression == 3)
+      if(b->simple.compression == 0)
+      {
+        rmask = 0;
+        gmask = 1;
+        bmask = 2;
+        amask = 3;
+      }
+      else if(b->simple.compression == 3)
       {
         rmask = maskMap(b->simple.r_mask);
         gmask = maskMap(b->simple.g_mask);
@@ -238,14 +250,30 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
         amask = maskMap(b->simple.a_mask);
       }
 
-      for(int i = 0; i < img->height; i++)
+      if(b->simple.reversed)
       {
-        for(int j = 0; j < img->width; j++)
+        for(int i = 0; i < img->height; i++)
         {
-          img->data[(i*img->width)+j].a = amask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+amask];
-          img->data[(i*img->width)+j].b = bmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+bmask];
-          img->data[(i*img->width)+j].g = gmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+gmask];
-          img->data[(i*img->width)+j].r = rmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*4)+rmask];
+          for(int j = 0; j < img->width; j++)
+          {
+            img->data[(i*img->width)+j].a = (amask == 255) ? 255 : data[(i*roww)+(j*4)+amask];
+            img->data[(i*img->width)+j].b = (bmask == 255) ? 255 : data[(i*roww)+(j*4)+bmask];
+            img->data[(i*img->width)+j].g = (gmask == 255) ? 255 : data[(i*roww)+(j*4)+gmask];
+            img->data[(i*img->width)+j].r = (rmask == 255) ? 255 : data[(i*roww)+(j*4)+rmask];
+          }
+        }
+      }
+      else
+      {
+        for(int i = 0; i < img->height; i++)
+        {
+          for(int j = 0; j < img->width; j++)
+          {
+            img->data[(i*img->width)+j].a = (amask == 255) ? 255 : data[((img->height-1-i)*roww)+(j*4)+amask];
+            img->data[(i*img->width)+j].b = (bmask == 255) ? 255 : data[((img->height-1-i)*roww)+(j*4)+bmask];
+            img->data[(i*img->width)+j].g = (gmask == 255) ? 255 : data[((img->height-1-i)*roww)+(j*4)+gmask];
+            img->data[(i*img->width)+j].r = (rmask == 255) ? 255 : data[((img->height-1-i)*roww)+(j*4)+rmask];
+          }
         }
       }
     break;
@@ -266,10 +294,10 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
       {
         for(int j = 0; j < img->width; j++)
         {
-          img->data[(i*img->width)+j].a = amask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+bmask];
-          img->data[(i*img->width)+j].b = bmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+bmask];
-          img->data[(i*img->width)+j].g = gmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+gmask];
-          img->data[(i*img->width)+j].r = rmask == 255 ? 255 : data[((img->height-1-i)*roww)+(j*3)+rmask];
+          img->data[(i*img->width)+j].a = (amask == 255) ? 255 : data[( (b->simple.reversed ? i : (img->height-1-i) ) *roww)+(j*3)+bmask];
+          img->data[(i*img->width)+j].b = (bmask == 255) ? 255 : data[( (b->simple.reversed ? i : (img->height-1-i) ) *roww)+(j*3)+bmask];
+          img->data[(i*img->width)+j].g = (gmask == 255) ? 255 : data[( (b->simple.reversed ? i : (img->height-1-i) ) *roww)+(j*3)+gmask];
+          img->data[(i*img->width)+j].r = (rmask == 255) ? 255 : data[( (b->simple.reversed ? i : (img->height-1-i) ) *roww)+(j*3)+rmask];
         }
       }
     break;

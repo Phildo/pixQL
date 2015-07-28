@@ -178,7 +178,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
       }
       break;
     }
-    case 8: // SIN, COS, TAN, ABS
+    case 8: // SIN, COS, TAN, ABS, INT_CAST
     {
       tok;
       if(isTokenLevel(token, level))
@@ -188,6 +188,7 @@ static int parseIntoExpression(char *q, int s, int e, int level, QueryExpression
         else if(teq("cos")) qexp->type = QUERY_EXPRESSION_TYPE_COS;
         else if(teq("tan")) qexp->type = QUERY_EXPRESSION_TYPE_TAN;
         else if(teq("abs")) qexp->type = QUERY_EXPRESSION_TYPE_ABS;
+        else if(teq("int")) qexp->type = QUERY_EXPRESSION_TYPE_INT_CAST;
         qexp->a = calloc(sizeof(QueryExpression),1);
         l = parseIntoExpression(q, o, e, level, qexp->a, err);
         switch(err->type)
@@ -853,6 +854,7 @@ static void freeExpressionContents(QueryExpression *qexp)
     case QUERY_EXPRESSION_TYPE_COS:
     case QUERY_EXPRESSION_TYPE_TAN:
     case QUERY_EXPRESSION_TYPE_ABS:
+    case QUERY_EXPRESSION_TYPE_INT_CAST:
     case QUERY_EXPRESSION_TYPE_NEG:
       freeExpressionContents(qexp->a);
       free(qexp->a);

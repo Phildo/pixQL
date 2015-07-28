@@ -1,8 +1,7 @@
 PRIORITY:
 terse operations- OPERATE SET R = 1, G = 2, B = 5
-float math/bigger intermediary representation of pixels
+bigger intermediary representation of pixels
 parse float
-add "CAST" operation
 consider #DEADBE as #DEADBEFF (6 byte as bitshift to 8 || FF)
 IN1, IN2, ..., BUFF1, BUFF2, etc...
 
@@ -40,6 +39,7 @@ SIN([ EXPRESSION ])
 COS([ EXPRESSION ])
 TAN([ EXPRESSION ])
 ABS([ EXPRESSION ])
+INT([ EXPRESSION ])
 - [ EXPRESSION ]
 [ VALUE ]
 

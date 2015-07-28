@@ -106,8 +106,9 @@ typedef union DIBHeader
 //don't have to wade through versions to access data
 typedef struct
 {
-  uint32 width;
-  uint32 height;
+  uint32 width;  //uint not for extra storage, but to enforce > 0
+  uint32 height; //uint not for extra storage, but to enforce > 0
+  uint8 reversed; //true if bmp height < 0 (internal height will always be > 0)
   uint32 bpp;
   uint32 row_w;
   uint32 pixel_n_bytes;

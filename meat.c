@@ -229,6 +229,10 @@ static ERR_EXISTS evaluateExpression(QueryExpression *qexp, int col, int row, Pi
       if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = abs((int)na.i); }
       if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = fabs(na.r); }
       break;
+    case QUERY_EXPRESSION_TYPE_INT_CAST:
+      if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT; n->i = na.i; }
+      if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_INT; n->i = (int)na.r; }
+      break;
     case QUERY_EXPRESSION_TYPE_NEG:
       if(na.type == NUMBER_TYPE_INT)  { n->type = NUMBER_TYPE_INT;  n->i = -1 * na.i; }
       if(na.type == NUMBER_TYPE_REAL) { n->type = NUMBER_TYPE_REAL; n->r = -1.0f * na.r; }
