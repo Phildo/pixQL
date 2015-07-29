@@ -284,8 +284,8 @@ static ERR_EXISTS evaluateOperation(QueryOperation *op, int col, int row, PixImg
   }
   else pcol = col;
 
-  if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
-  if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
+  if(prow < 0) prow = 0; if(prow > out->width-1) prow = out->width-1;
+  if(pcol < 0) pcol = 0; if(pcol > out->width-1) pcol = out->width-1;
 
   int v;
   int val;
