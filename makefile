@@ -26,7 +26,7 @@ SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/new.bmp -q "OPERATE SET G = G;"
 SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/cage_out.bmp -q "COPY(100,20); SELECT WHERE ROW < 5; OPERATE SET G = 255;"
 SAMPLE_ARGS = -i ~/Desktop/cage_imagick.bmp -o ~/Desktop/cage_out.bmp -q "SELECT WHERE ROW%2; OPERATE SET R = 255;"
 SAMPLE_ARGS = -i ~/Desktop/cage.bmp -o ~/Desktop/cage_out.bmp "WHITE(WIDTH/4,HEIGHT/4); OPERATE SET COLOR = IN[COL*4,ROW*4].COLOR;"
-SAMPLE_ARGS = -i ../color_test.bmp -o ../pixql2.bmp $(SAMPLE_QUERY)
+SAMPLE_ARGS = -i ../paint.bmp -o ../out.bmp $(SAMPLE_QUERY)
 
 $(OUTFILE): $(HEADERS) $(SOURCES)
 	$(CC) $(CFLAGS) $(LFLAGS) $(SOURCES) -o $(OUTFILE)

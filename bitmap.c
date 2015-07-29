@@ -237,9 +237,9 @@ static ERR_EXISTS dataToPix(Bitmap *b, PixImg *img, PixErr *err)
       amask = 0;
       if(b->simple.compression == 0)
       {
-        rmask = 0;
+        rmask = 2;
         gmask = 1;
-        bmask = 2;
+        bmask = 0;
         amask = 3;
       }
       else if(b->simple.compression == 3)
