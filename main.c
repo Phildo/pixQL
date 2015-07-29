@@ -10,8 +10,8 @@
 #include "io.h"
 #include "meat.h"
 
-const char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
-const char *invalid = "Invalid file- file does not conform to bitmap spec";
+static char *usage = "Usage: pixql -i input_file -o output_file \"query\"";
+static char *default_out = "out.bmp";
 
 ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char **queryfile, char **query, PixErr *err)
 {
@@ -25,7 +25,7 @@ ERR_EXISTS parseArgs(int argc, char **argv, char **infile, char **outfile, char 
   }
 
   //if(!*infile)               ERROR("%s\nNo input file specified.",  usage);
-  //if(!*outfile)              ERROR("%s\nNo output file specified.", usage);
+  if(!*outfile)              *outfile = default_out; //ERROR("%s\nNo output file specified.", usage);
   if(!*queryfile && !*query) ERROR("%s\nNo query specified.",       usage);
 
   if(*queryfile && !*query)
