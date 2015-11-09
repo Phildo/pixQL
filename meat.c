@@ -17,9 +17,9 @@ typedef struct
   double r;
 } Number;
 
-static ERR_EXISTS evaluateValue(QueryValue *v, int row, int col, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
-static ERR_EXISTS evaluateExpression(QueryExpression *qexp, int row, int col, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
-static ERR_EXISTS evaluateOperation(QueryOperation *op, int row, int col, PixImg *target, PixImg *in, PixImg *out, PixErr *err);
+static ERR_EXISTS evaluateValue(QueryValue *v, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
+static ERR_EXISTS evaluateExpression(QueryExpression *qexp, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err);
+static ERR_EXISTS evaluateOperation(QueryOperation *op, int col, int row, PixImg *target, PixImg *in, PixImg *out, PixErr *err);
 
 static ERR_EXISTS evaluateConstant(QueryConstant *c, int col, int row, PixImg *target, PixImg *in, PixImg *out, Number *n, PixErr *err)
 {
@@ -284,8 +284,8 @@ static ERR_EXISTS evaluateOperation(QueryOperation *op, int col, int row, PixImg
   }
   else pcol = col;
 
-  if(prow < 0) prow = 0; if(prow > out->width-1) prow = out->width-1;
-  if(pcol < 0) pcol = 0; if(pcol > out->width-1) pcol = out->width-1;
+  if(prow < 0) prow = 0; if(prow > out->height-1) prow = out->height-1;
+  if(pcol < 0) pcol = 0; if(pcol > out->width-1)  pcol = out->width-1;
 
   int v;
   int val;

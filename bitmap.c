@@ -348,7 +348,7 @@ ERR_EXISTS imageToBitmap(PixImg *img, Bitmap *b, PixErr *err)
 {
   int headersize = 2+4+2+2+4;
   int dibsize = BITMAPV5HEADER_SIZE;
-  int datasize = img->width*img->height*4;;
+  int datasize = img->width*img->height*4;
 
   BitmapFileHeader *h = &b->bitmap_file_header;
   h->header_field[0] = 'B';
