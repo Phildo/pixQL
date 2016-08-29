@@ -57,6 +57,11 @@ static ERR_EXISTS evaluateMember(QueryMember *m, int col, int row, PixImg *targe
   if(m->row)
   {
     if(!evaluateExpression(m->row,col,row,target,in,out,&na,err)) return ERR;
+    if(na.type == NUMBER_TYPE_REAL)
+    {
+      na.type = NUMBER_TYPE_INT;
+      na.i = (int)na.r;
+    }
     if(na.type != NUMBER_TYPE_INT) ERROR("Invalid row type");
     prow = na.i;
   }
@@ -65,7 +70,12 @@ static ERR_EXISTS evaluateMember(QueryMember *m, int col, int row, PixImg *targe
   if(m->col)
   {
     if(!evaluateExpression(m->col,col,row,target,in,out,&na,err)) return ERR;
-    if(na.type != NUMBER_TYPE_INT) ERROR("Invalid col type");
+    if(na.type == NUMBER_TYPE_REAL)
+    {
+      na.type = NUMBER_TYPE_INT;
+      na.i = (int)na.r;
+    }
+    else if(na.type != NUMBER_TYPE_INT) ERROR("Invalid col type");
     pcol = na.i;
   }
   else pcol = col;
