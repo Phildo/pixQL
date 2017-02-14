@@ -80,8 +80,8 @@ static ERR_EXISTS evaluateMember(QueryMember *m, int col, int row, PixImg *targe
   }
   else pcol = col;
 
-  if(prow < 0) prow = 0; if(prow > t->width-1) prow = t->width-1;
-  if(pcol < 0) pcol = 0; if(pcol > t->width-1) pcol = t->width-1;
+  if(prow < 0) prow = 0; if(prow > t->height-1) prow = t->height-1;
+  if(pcol < 0) pcol = 0; if(pcol > t->width -1) pcol = t->width-1;
 
   Pix *p;
   switch(m->type)
