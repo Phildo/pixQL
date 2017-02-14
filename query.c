@@ -347,6 +347,7 @@ static int parseIntoConstant(char *q, int s, int e, QueryConstant *c, QueryError
   {
          if(teq("white"))   c->value = 0xFFFFFFFF;
     else if(teq("black"))   c->value = 0x000000FF;
+    else if(teq("clear"))   c->value = 0x00000000;
     else if(teq("red"))     c->value = 0xFF0000FF;
     else if(teq("green"))   c->value = 0x00FF00FF;
     else if(teq("blue"))    c->value = 0x0000FFFF;
