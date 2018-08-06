@@ -36,7 +36,7 @@ static ERR_EXISTS readDIBHeader(FILE *fp, DIBHeader *dh, PixErr *err)
     case OS22XBITMAPHEADER_SIZE:  ERROR("Unsupported DIB header OS22X (header size %d)\n", dh->header_size); break;
     case BITMAPV2INFOHEADER_SIZE: ERROR("Unsupported DIB header V2 (header size %d)\n",    dh->header_size); break;
     case BITMAPV3INFOHEADER_SIZE: ERROR("Unsupported DIB header V3 (header size %d)\n",    dh->header_size); break;
-    case BITMAPV4HEADER_SIZE:     ERROR("Unsupported DIB header V5 (header size %d)\n",    dh->header_size); break;
+    case BITMAPV4HEADER_SIZE:     ERROR("Unsupported DIB header V4 (header size %d)\n",    dh->header_size); break;
     default:                      ERROR("Unsupported DIB header (header size %d)\n",       dh->header_size); break;
   }
   READFIELD(ih->width);
